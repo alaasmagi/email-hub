@@ -1,26 +1,86 @@
-﻿@{
+@{
     ViewData["Title"] = "Email Hub";
 }
 
-<div class="py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-7 text-center">
-            <h1 class="display-5 mb-3">Email Hub</h1>
-            <p class="lead text-muted mb-4">
-                Manage email clients, sender identities, templates, and delivery history.
-            </p>
+<section class="home-hero">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <p class="home-kicker">Transactional email operations</p>
+                <h1>Email Hub</h1>
+                <p class="home-copy">
+                    Centralized template, sender, and delivery management for identity emails from Keycloak.
+                </p>
 
-            @if (User.Identity?.IsAuthenticated == true)
-            {
-                <div class="d-flex justify-content-center gap-2">
-                    <a class="btn btn-primary" asp-controller="Clients" asp-action="Index">Open admin</a>
-                    <a class="btn btn-outline-secondary" asp-controller="Emails" asp-action="Index">View emails</a>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="d-flex flex-wrap gap-2">
+                        <a class="btn btn-primary btn-lg" asp-controller="Clients" asp-action="Index">Open admin</a>
+                        <a class="btn btn-outline-secondary btn-lg" asp-controller="Emails" asp-action="Index">View deliveries</a>
+                    </div>
+                }
+                else
+                {
+                    <a class="btn btn-primary btn-lg" asp-controller="Account" asp-action="Login">Login</a>
+                }
+            </div>
+            <div class="col-lg-5">
+                <div class="status-panel">
+                    <div class="status-panel-header">
+                        <span>Identity events</span>
+                        <span class="status-pill">RabbitMQ</span>
+                    </div>
+                    <div class="status-row">
+                        <span>Password reset</span>
+                        <strong>Template routed</strong>
+                    </div>
+                    <div class="status-row">
+                        <span>Email verification</span>
+                        <strong>Template routed</strong>
+                    </div>
+                    <div class="status-row">
+                        <span>2FA OTP</span>
+                        <strong>Template routed</strong>
+                    </div>
+                    <div class="status-footer">
+                        Brevo delivery with GlitchTip error reporting
+                    </div>
                 </div>
-            }
-            else
-            {
-                <a class="btn btn-primary btn-lg" asp-controller="Account" asp-action="Login">Login</a>
-            }
+            </div>
         </div>
     </div>
-</div>
+</section>
+
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <section class="home-actions">
+        <div class="container">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <a class="action-card" asp-controller="Clients" asp-action="Index">
+                        <span>Clients</span>
+                        <strong>Manage service mappings</strong>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a class="action-card" asp-controller="SenderIdentities" asp-action="Index">
+                        <span>Senders</span>
+                        <strong>Control sender identities</strong>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a class="action-card" asp-controller="Templates" asp-action="Index">
+                        <span>Templates</span>
+                        <strong>Edit database cshtml</strong>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a class="action-card" asp-controller="Emails" asp-action="Index">
+                        <span>Emails</span>
+                        <strong>Review delivery status</strong>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+}
