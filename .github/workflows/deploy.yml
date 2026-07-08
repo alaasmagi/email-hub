@@ -12,7 +12,7 @@ concurrency:
 
 env:
   IMAGE_NAME: alaasmagi-email-hub
-  REMOTE_APP_DIR: /infra/email-hub
+  REMOTE_APP_DIR: /home/github-actions/infra/email-hub
   APP_PORT: "8080"
   HOST_PORT: "2500"
 
