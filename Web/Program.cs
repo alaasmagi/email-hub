@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Web.Configuration;
@@ -145,6 +146,17 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor
+                       | ForwardedHeaders.XForwardedHost
+                       | ForwardedHeaders.XForwardedProto,
+    ForwardLimit = 1
+};
+
+forwardedHeadersOptions.KnownIPNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -153,6 +165,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.UseForwardedHeaders(forwardedHeadersOptions);
 app.UseHttpsRedirection();
 app.UseRouting();
 
