@@ -14,7 +14,7 @@ env:
   IMAGE_NAME: alaasmagi-email-hub
   REMOTE_APP_DIR: /infra/email-hub
   APP_PORT: "8080"
-  HOST_PORT: "8080"
+  HOST_PORT: "2500"
 
 jobs:
   deploy:
