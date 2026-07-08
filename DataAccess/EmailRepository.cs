@@ -39,4 +39,19 @@ public class EmailRepository : BaseRepository<Email, EmailEntity, EmailEntityMap
 
         return _repositoryMapper.Map(entity);
     }
+
+    public Task<int> UpdateDeliveryStatusAsync(
+        Guid id,
+        EEmailStatus status,
+        DateTime? sentAt,
+        CancellationToken cancellationToken = default)
+    {
+        return _repositoryDbContext.Emails
+            .Where(x => x.Id == id)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(x => x.Status, status)
+                    .SetProperty(x => x.SentAt, sentAt),
+                cancellationToken);
+    }
 }

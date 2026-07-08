@@ -253,12 +253,12 @@ public class KeycloakEmailEventConsumer : BackgroundService, IKeycloakEmailEvent
             if (!dispatchResponse.Successful)
             {
                 _logger.LogWarning(
-                    "Failed to dispatch Keycloak email event. EventType: {EventType}, RealmName: {RealmName}, DeliveryTag: {DeliveryTag}. Message will be requeued.",
+                    "Failed to dispatch Keycloak email event. EventType: {EventType}, RealmName: {RealmName}, DeliveryTag: {DeliveryTag}. Message will not be requeued.",
                     emailEvent.EventType,
                     emailEvent.RealmName,
                     eventArgs.DeliveryTag);
 
-                await _channel.BasicNackAsync(eventArgs.DeliveryTag, multiple: false, requeue: true);
+                await _channel.BasicRejectAsync(eventArgs.DeliveryTag, requeue: false);
                 return;
             }
 
@@ -277,8 +277,11 @@ public class KeycloakEmailEventConsumer : BackgroundService, IKeycloakEmailEvent
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "Unexpected failure while processing Keycloak email event.");
-            await _channel.BasicNackAsync(eventArgs.DeliveryTag, multiple: false, requeue: true);
+            _logger.LogError(
+                exception,
+                "Unexpected failure while processing Keycloak email event. Message will not be requeued because delivery may have already reached the email provider.");
+
+            await _channel.BasicRejectAsync(eventArgs.DeliveryTag, requeue: false);
         }
     }
 }

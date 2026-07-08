@@ -178,19 +178,22 @@ public class EmailDispatchService : IEmailDispatchService
             email.SentAt = DateTime.UtcNow;
         }
 
-        var updateEmailResponse = await _emailRepository.UpdateAsync(email.Id, email, null, Guid.Empty);
-        if (!updateEmailResponse.Successful)
+        var updatedEmailCount = await _emailRepository.UpdateDeliveryStatusAsync(
+            email.Id,
+            email.Status,
+            email.SentAt,
+            cancellationToken);
+
+        if (updatedEmailCount != 1)
         {
             _logger.LogError(
-                "Email dispatch failed because email record status could not be updated. EmailId: {EmailId}, CorrelationId: {CorrelationId}, ErrorMessage: {ErrorMessage}",
+                "Email dispatch failed because email record status could not be updated. EmailId: {EmailId}, CorrelationId: {CorrelationId}, UpdatedEmailCount: {UpdatedEmailCount}",
                 email.Id,
                 request.CorrelationId,
-                updateEmailResponse.Error!.Message);
+                updatedEmailCount);
 
-            return Failure(updateEmailResponse.Error.Message);
+            return Failure("Email record status could not be updated.");
         }
-
-        await _uow.SaveChangesAsync();
 
         if (sendResult.Successful)
         {

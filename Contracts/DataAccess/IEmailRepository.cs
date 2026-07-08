@@ -7,4 +7,9 @@ public interface IEmailRepository : IBaseRepository<Email>
 {
     Task<IReadOnlyList<Email>> GetAllForAdminAsync();
     Task<Email?> GetForAdminAsync(Guid id);
+    Task<int> UpdateDeliveryStatusAsync(
+        Guid id,
+        EEmailStatus status,
+        DateTime? sentAt,
+        CancellationToken cancellationToken = default);
 }

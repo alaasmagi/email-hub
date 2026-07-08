@@ -5,7 +5,7 @@ public class RabbitMqEmailConsumerOptions
     public string? Uri { get; set; }
     public string[] ExchangeNames { get; set; } = ["identity-events"];
     public string QueueName { get; set; } = "email-hub.identity-email";
-    public ushort PrefetchCount { get; set; } = 10;
+    public ushort PrefetchCount { get; set; } = 1;
     public int RetryDelaySeconds { get; set; } = 10;
     public string[] RoutingKeys { get; set; } =
     [
