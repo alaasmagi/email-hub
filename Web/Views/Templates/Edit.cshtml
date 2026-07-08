@@ -1,0 +1,21 @@
+@model Template
+
+@{
+    ViewData["Title"] = "Edit template";
+}
+
+<h1 class="h3 mb-3">Edit template</h1>
+
+<form asp-action="Edit" method="post" class="vstack gap-3">
+    <input type="hidden" asp-for="Id"/>
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <partial name="_Form" model="Model"/>
+    <div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a class="btn btn-outline-secondary" asp-action="Index">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial"/>
+}

@@ -1,0 +1,37 @@
+@model IEnumerable<Email>
+
+@{
+    ViewData["Title"] = "Emails";
+}
+
+<h1 class="h3 mb-3">Emails</h1>
+
+<table class="table table-striped align-middle">
+    <thead>
+    <tr>
+        <th>Service</th>
+        <th>Type</th>
+        <th>To</th>
+        <th>Subject</th>
+        <th>Status</th>
+        <th>Sent at</th>
+        <th class="text-end">Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var email in Model)
+    {
+        <tr>
+            <td>@email.ServiceName</td>
+            <td>@email.EmailType</td>
+            <td>@email.ToRecipients</td>
+            <td>@email.Subject</td>
+            <td>@email.Status</td>
+            <td>@email.SentAt?.ToString("u")</td>
+            <td class="text-end">
+                <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@email.Id">Details</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

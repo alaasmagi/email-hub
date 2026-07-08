@@ -1,0 +1,204 @@
+name: Build and Deploy Docker Image
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-email-hub
+  cancel-in-progress: true
+
+env:
+  IMAGE_NAME: alaasmagi-email-hub
+  REMOTE_APP_DIR: /opt/alaasmagi-email-hub
+  APP_PORT: "8080"
+  HOST_PORT: "8080"
+
+jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' &&
+       github.ref == 'refs/heads/main' &&
+       contains(github.event.head_commit.message, '[DEPLOY]'))
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          set -euo pipefail
+          docker build --pull --file Web/Dockerfile -t "${IMAGE_NAME}:${GITHUB_SHA}" .
+
+      - name: Save Docker image
+        run: |
+          set -euo pipefail
+          docker save "${IMAGE_NAME}:${GITHUB_SHA}" | gzip > image.tar.gz
+
+      - name: Create runtime env file from GitHub secrets
+        env:
+          APP_PORT: ${{ secrets.CONTAINER_PORT || secrets.APP_PORT || env.APP_PORT }}
+          HOST_PORT: ${{ secrets.HOST_PORT || secrets.APP_PORT || env.HOST_PORT }}
+          DATABASE_CONNECTION_STRING: ${{ secrets.DATABASE_CONNECTION_STRING }}
+          RABBITMQ_URI: ${{ secrets.RABBITMQ_URI }}
+          RABBITMQ_EXCHANGES: ${{ secrets.RABBITMQ_EXCHANGES }}
+          RABBITMQ_EMAIL_QUEUE: ${{ secrets.RABBITMQ_EMAIL_QUEUE }}
+          RABBITMQ_EMAIL_PREFETCH: ${{ secrets.RABBITMQ_EMAIL_PREFETCH }}
+          RABBITMQ_RETRY_DELAY_SECONDS: ${{ secrets.RABBITMQ_RETRY_DELAY_SECONDS }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          BREVO_BASE_URL: ${{ secrets.BREVO_BASE_URL }}
+          GLITCHTIP_DSN: ${{ secrets.GLITCHTIP_DSN }}
+          GLITCHTIP_ENVIRONMENT: ${{ secrets.GLITCHTIP_ENVIRONMENT }}
+          GLITCHTIP_RELEASE: ${{ secrets.GLITCHTIP_RELEASE }}
+          GLITCHTIP_SAMPLE_RATE: ${{ secrets.GLITCHTIP_SAMPLE_RATE }}
+          KEYCLOAK_AUTHORITY: ${{ secrets.KEYCLOAK_AUTHORITY }}
+          KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_CLIENT_ID }}
+          KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
+          KEYCLOAK_CALLBACK_PATH: ${{ secrets.KEYCLOAK_CALLBACK_PATH }}
+          KEYCLOAK_REQUIRE_HTTPS_METADATA: ${{ secrets.KEYCLOAK_REQUIRE_HTTPS_METADATA }}
+          LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
+          MICROSOFT_LOG_LEVEL: ${{ secrets.MICROSOFT_LOG_LEVEL }}
+          ENTITY_FRAMEWORK_LOG_LEVEL: ${{ secrets.ENTITY_FRAMEWORK_LOG_LEVEL }}
+        run: |
+          set -euo pipefail
+
+          : "${DATABASE_CONNECTION_STRING:?DATABASE_CONNECTION_STRING is required}"
+          : "${RABBITMQ_URI:?RABBITMQ_URI is required}"
+          : "${RABBITMQ_EXCHANGES:?RABBITMQ_EXCHANGES is required}"
+          : "${RABBITMQ_EMAIL_QUEUE:?RABBITMQ_EMAIL_QUEUE is required}"
+          : "${BREVO_API_KEY:?BREVO_API_KEY is required}"
+          : "${GLITCHTIP_DSN:?GLITCHTIP_DSN is required}"
+          : "${KEYCLOAK_AUTHORITY:?KEYCLOAK_AUTHORITY is required}"
+          : "${KEYCLOAK_CLIENT_ID:?KEYCLOAK_CLIENT_ID is required}"
+          : "${KEYCLOAK_CLIENT_SECRET:?KEYCLOAK_CLIENT_SECRET is required}"
+
+          write_optional() {
+            local key="$1"
+            local value="${2:-}"
+
+            if [ -n "${value}" ]; then
+              printf '%s=%s\n' "${key}" "${value}"
+            fi
+          }
+
+          {
+            printf 'ASPNETCORE_ENVIRONMENT=%s\n' 'Production'
+            printf 'APP_PORT=%s\n' "${APP_PORT}"
+            printf 'HOST_PORT=%s\n' "${HOST_PORT}"
+            printf 'ASPNETCORE_URLS=%s\n' "http://+:${APP_PORT}"
+
+            printf 'DATABASE_CONNECTION_STRING=%s\n' "${DATABASE_CONNECTION_STRING}"
+
+            printf 'RABBITMQ_URI=%s\n' "${RABBITMQ_URI}"
+            printf 'RABBITMQ_EXCHANGES=%s\n' "${RABBITMQ_EXCHANGES}"
+            printf 'RABBITMQ_EMAIL_QUEUE=%s\n' "${RABBITMQ_EMAIL_QUEUE}"
+            write_optional 'RABBITMQ_EMAIL_PREFETCH' "${RABBITMQ_EMAIL_PREFETCH:-}"
+            write_optional 'RABBITMQ_RETRY_DELAY_SECONDS' "${RABBITMQ_RETRY_DELAY_SECONDS:-}"
+
+            printf 'BREVO_API_KEY=%s\n' "${BREVO_API_KEY}"
+            write_optional 'BREVO_BASE_URL' "${BREVO_BASE_URL:-}"
+
+            printf 'GLITCHTIP_DSN=%s\n' "${GLITCHTIP_DSN}"
+            printf 'GLITCHTIP_ENVIRONMENT=%s\n' "${GLITCHTIP_ENVIRONMENT:-production}"
+            write_optional 'GLITCHTIP_RELEASE' "${GLITCHTIP_RELEASE:-}"
+            write_optional 'GLITCHTIP_SAMPLE_RATE' "${GLITCHTIP_SAMPLE_RATE:-}"
+
+            printf 'KEYCLOAK_AUTHORITY=%s\n' "${KEYCLOAK_AUTHORITY}"
+            printf 'KEYCLOAK_CLIENT_ID=%s\n' "${KEYCLOAK_CLIENT_ID}"
+            printf 'KEYCLOAK_CLIENT_SECRET=%s\n' "${KEYCLOAK_CLIENT_SECRET}"
+            write_optional 'KEYCLOAK_CALLBACK_PATH' "${KEYCLOAK_CALLBACK_PATH:-}"
+            write_optional 'KEYCLOAK_REQUIRE_HTTPS_METADATA' "${KEYCLOAK_REQUIRE_HTTPS_METADATA:-}"
+
+            write_optional 'LOG_LEVEL' "${LOG_LEVEL:-}"
+            write_optional 'MICROSOFT_LOG_LEVEL' "${MICROSOFT_LOG_LEVEL:-}"
+            write_optional 'ENTITY_FRAMEWORK_LOG_LEVEL' "${ENTITY_FRAMEWORK_LOG_LEVEL:-}"
+          } > .env
+
+          chmod 600 .env
+
+      - name: Configure SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+        run: |
+          set -euo pipefail
+
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${VPS_SSH_KEY}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          PORT="${VPS_PORT:-22}"
+          ssh-keyscan -T 30 -H -p "${PORT}" "${VPS_HOST}" >> ~/.ssh/known_hosts || \
+            echo "Warning: ssh-keyscan failed for VPS_HOST on port ${PORT}; SSH will use StrictHostKeyChecking=accept-new."
+
+      - name: Upload image and compose files to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+        run: |
+          set -euo pipefail
+
+          PORT="${VPS_PORT:-22}"
+
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -p "${PORT}" "${VPS_USER}@${VPS_HOST}" \
+            "mkdir -p '${REMOTE_APP_DIR}' && chown '${VPS_USER}:${VPS_USER}' '${REMOTE_APP_DIR}'"
+
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -P "${PORT}" \
+            image.tar.gz .env compose.yaml \
+            "${VPS_USER}@${VPS_HOST}:${REMOTE_APP_DIR}/"
+
+      - name: Run docker compose on VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          APP_PORT: ${{ secrets.CONTAINER_PORT || secrets.APP_PORT || env.APP_PORT }}
+          HOST_PORT: ${{ secrets.HOST_PORT || secrets.APP_PORT || env.HOST_PORT }}
+        run: |
+          set -euo pipefail
+
+          PORT="${VPS_PORT:-22}"
+
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -p "${PORT}" "${VPS_USER}@${VPS_HOST}" \
+            IMAGE_NAME="${IMAGE_NAME}" \
+            IMAGE_TAG="${GITHUB_SHA}" \
+            REMOTE_APP_DIR="${REMOTE_APP_DIR}" \
+            APP_PORT="${APP_PORT}" \
+            HOST_PORT="${HOST_PORT}" \
+            'bash -s' <<'EOF_REMOTE'
+          set -euo pipefail
+
+          if docker info >/dev/null 2>&1; then
+            DOCKER="docker"
+          else
+            DOCKER="sudo docker"
+          fi
+
+          if $DOCKER compose version >/dev/null 2>&1; then
+            COMPOSE_CMD=($DOCKER compose)
+          elif command -v docker-compose >/dev/null 2>&1; then
+            COMPOSE_CMD=(docker-compose)
+          else
+            echo "Docker Compose is required on the target host." >&2
+            exit 1
+          fi
+
+          cd "$REMOTE_APP_DIR"
+
+          gunzip -c image.tar.gz | $DOCKER load
+
+          chmod 600 .env
+
+          $DOCKER network inspect proxy >/dev/null 2>&1 || $DOCKER network create proxy
+
+          export IMAGE_NAME IMAGE_TAG APP_PORT HOST_PORT
+          "${COMPOSE_CMD[@]}" --env-file .env -f compose.yaml up -d --remove-orphans
+
+          $DOCKER image prune -f
+          EOF_REMOTE

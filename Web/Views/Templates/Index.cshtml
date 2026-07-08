@@ -1,0 +1,36 @@
+@model IEnumerable<Template>
+
+@{
+    ViewData["Title"] = "Templates";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Templates</h1>
+    <a class="btn btn-primary" asp-action="Create">Create</a>
+</div>
+
+<table class="table table-striped align-middle">
+    <thead>
+    <tr>
+        <th>Sender identity</th>
+        <th>Language</th>
+        <th>Subject</th>
+        <th>Active</th>
+        <th class="text-end">Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var template in Model)
+    {
+        <tr>
+            <td><code>@template.SenderIdentityId</code></td>
+            <td>@template.LanguageCode</td>
+            <td>@template.SubjectTemplate</td>
+            <td>@(template.IsActive ? "Yes" : "No")</td>
+            <td class="text-end">
+                <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@template.Id">Edit</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

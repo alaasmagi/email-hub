@@ -1,0 +1,32 @@
+@model Email
+
+@{
+    ViewData["Title"] = "Email details";
+}
+
+<h1 class="h3 mb-3">Email details</h1>
+
+<dl class="row">
+    <dt class="col-sm-3">Service</dt>
+    <dd class="col-sm-9">@Model.ServiceName</dd>
+
+    <dt class="col-sm-3">Type</dt>
+    <dd class="col-sm-9">@Model.EmailType</dd>
+
+    <dt class="col-sm-3">To</dt>
+    <dd class="col-sm-9">@Model.ToRecipients</dd>
+
+    <dt class="col-sm-3">Reply-to</dt>
+    <dd class="col-sm-9">@Model.ReplyTo</dd>
+
+    <dt class="col-sm-3">Subject</dt>
+    <dd class="col-sm-9">@Model.Subject</dd>
+
+    <dt class="col-sm-3">Status</dt>
+    <dd class="col-sm-9">@Model.Status</dd>
+
+    <dt class="col-sm-3">Sent at</dt>
+    <dd class="col-sm-9">@Model.SentAt?.ToString("u")</dd>
+</dl>
+
+<a class="btn btn-outline-secondary" asp-action="Index">Back</a>

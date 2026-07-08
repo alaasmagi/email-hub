@@ -1,0 +1,36 @@
+@model SenderIdentity
+
+<div>
+    <label class="form-label" asp-for="ClientId"></label>
+    <select class="form-select" asp-for="ClientId" asp-items="ViewBag.Clients"></select>
+    <span class="text-danger" asp-validation-for="ClientId"></span>
+</div>
+
+<div>
+    <label class="form-label" asp-for="EmailType"></label>
+    <input class="form-control" asp-for="EmailType" placeholder="password-reset, verify, 2fa-otp"/>
+    <span class="text-danger" asp-validation-for="EmailType"></span>
+</div>
+
+<div>
+    <label class="form-label" asp-for="FromAddress"></label>
+    <input class="form-control" asp-for="FromAddress"/>
+    <span class="text-danger" asp-validation-for="FromAddress"></span>
+</div>
+
+<div>
+    <label class="form-label" asp-for="DisplayName"></label>
+    <input class="form-control" asp-for="DisplayName"/>
+    <span class="text-danger" asp-validation-for="DisplayName"></span>
+</div>
+
+<div>
+    <label class="form-label" asp-for="ReplyTo"></label>
+    <input class="form-control" asp-for="ReplyTo"/>
+    <span class="text-danger" asp-validation-for="ReplyTo"></span>
+</div>
+
+<div class="form-check">
+    <input class="form-check-input" asp-for="IsActive"/>
+    <label class="form-check-label" asp-for="IsActive"></label>
+</div>

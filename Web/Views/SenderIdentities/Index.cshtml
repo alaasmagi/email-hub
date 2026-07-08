@@ -1,0 +1,38 @@
+@model IEnumerable<SenderIdentity>
+
+@{
+    ViewData["Title"] = "Sender identities";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Sender identities</h1>
+    <a class="btn btn-primary" asp-action="Create">Create</a>
+</div>
+
+<table class="table table-striped align-middle">
+    <thead>
+    <tr>
+        <th>Email type</th>
+        <th>From</th>
+        <th>Display name</th>
+        <th>Reply-to</th>
+        <th>Active</th>
+        <th class="text-end">Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var sender in Model)
+    {
+        <tr>
+            <td>@sender.EmailType</td>
+            <td>@sender.FromAddress</td>
+            <td>@sender.DisplayName</td>
+            <td>@sender.ReplyTo</td>
+            <td>@(sender.IsActive ? "Yes" : "No")</td>
+            <td class="text-end">
+                <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@sender.Id">Edit</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

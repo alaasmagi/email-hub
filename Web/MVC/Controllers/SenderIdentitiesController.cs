@@ -1,0 +1,95 @@
+using Contracts.DataAccess;
+using Domain;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+
+namespace Web.MVC.Controllers;
+
+[Authorize]
+public class SenderIdentitiesController : Controller
+{
+    private readonly IClientRepository _clientRepository;
+    private readonly ISenderIdentityRepository _senderIdentityRepository;
+
+    public SenderIdentitiesController(
+        IClientRepository clientRepository,
+        ISenderIdentityRepository senderIdentityRepository)
+    {
+        _clientRepository = clientRepository;
+        _senderIdentityRepository = senderIdentityRepository;
+    }
+
+    public async Task<IActionResult> Index()
+    {
+        var senderIdentities = await _senderIdentityRepository.GetAllForAdminAsync();
+        return View(senderIdentities);
+    }
+
+    public async Task<IActionResult> Create()
+    {
+        await LoadClientsAsync();
+        return View(new SenderIdentity());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(SenderIdentity senderIdentity)
+    {
+        if (!ModelState.IsValid)
+        {
+            await LoadClientsAsync();
+            return View(senderIdentity);
+        }
+
+        await _senderIdentityRepository.CreateAsync(senderIdentity);
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    public async Task<IActionResult> Edit(Guid id)
+    {
+        var senderIdentity = await _senderIdentityRepository.GetForAdminAsync(id);
+        if (senderIdentity is null)
+        {
+            return NotFound();
+        }
+
+        await LoadClientsAsync();
+        return View(senderIdentity);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(Guid id, SenderIdentity senderIdentity)
+    {
+        if (id != senderIdentity.Id)
+        {
+            return BadRequest();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            await LoadClientsAsync();
+            return View(senderIdentity);
+        }
+
+        await _senderIdentityRepository.UpdateAsync(id, senderIdentity, null, Guid.Empty);
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    private async Task LoadClientsAsync()
+    {
+        var clients = (await _clientRepository.GetAllForAdminAsync())
+            .OrderBy(x => x.ServiceName)
+            .Select(x => new SelectListItem
+            {
+                Value = x.Id.ToString(),
+                Text = $"{x.ServiceName} - {x.DisplayName}"
+            })
+            .ToList();
+
+        ViewBag.Clients = clients;
+    }
+}

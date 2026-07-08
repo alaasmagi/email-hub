@@ -1,0 +1,30 @@
+@model Template
+
+<div>
+    <label class="form-label" asp-for="SenderIdentityId"></label>
+    <select class="form-select" asp-for="SenderIdentityId" asp-items="ViewBag.SenderIdentities"></select>
+    <span class="text-danger" asp-validation-for="SenderIdentityId"></span>
+</div>
+
+<div>
+    <label class="form-label" asp-for="LanguageCode"></label>
+    <input class="form-control" asp-for="LanguageCode"/>
+    <span class="text-danger" asp-validation-for="LanguageCode"></span>
+</div>
+
+<div>
+    <label class="form-label" asp-for="SubjectTemplate"></label>
+    <textarea class="form-control font-monospace" asp-for="SubjectTemplate" rows="3"></textarea>
+    <span class="text-danger" asp-validation-for="SubjectTemplate"></span>
+</div>
+
+<div>
+    <label class="form-label" asp-for="HtmlBodyTemplate"></label>
+    <textarea class="form-control font-monospace" asp-for="HtmlBodyTemplate" rows="18"></textarea>
+    <span class="text-danger" asp-validation-for="HtmlBodyTemplate"></span>
+</div>
+
+<div class="form-check">
+    <input class="form-check-input" asp-for="IsActive"/>
+    <label class="form-check-label" asp-for="IsActive"></label>
+</div>

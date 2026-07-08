@@ -1,0 +1,26 @@
+﻿@{
+    ViewData["Title"] = "Email Hub";
+}
+
+<div class="py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 text-center">
+            <h1 class="display-5 mb-3">Email Hub</h1>
+            <p class="lead text-muted mb-4">
+                Manage email clients, sender identities, templates, and delivery history.
+            </p>
+
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="d-flex justify-content-center gap-2">
+                    <a class="btn btn-primary" asp-controller="Clients" asp-action="Index">Open admin</a>
+                    <a class="btn btn-outline-secondary" asp-controller="Emails" asp-action="Index">View emails</a>
+                </div>
+            }
+            else
+            {
+                <a class="btn btn-primary btn-lg" asp-controller="Account" asp-action="Login">Login</a>
+            }
+        </div>
+    </div>
+</div>
