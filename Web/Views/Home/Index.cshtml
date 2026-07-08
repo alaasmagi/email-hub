@@ -9,7 +9,7 @@
                 <p class="home-kicker">Transactional email operations</p>
                 <h1>Email Hub</h1>
                 <p class="home-copy">
-                    Centralized template, sender, and delivery management for identity emails from Keycloak.
+                    A microservice for centralized transactional email routing, template rendering, sender management, and delivery review.
                 </p>
 
                 @if (User.Identity?.IsAuthenticated == true)
@@ -23,29 +23,6 @@
                 {
                     <a class="btn btn-primary btn-lg" asp-controller="Account" asp-action="Login">Login</a>
                 }
-            </div>
-            <div class="col-lg-5">
-                <div class="status-panel">
-                    <div class="status-panel-header">
-                        <span>Identity events</span>
-                        <span class="status-pill">RabbitMQ</span>
-                    </div>
-                    <div class="status-row">
-                        <span>Password reset</span>
-                        <strong>Template routed</strong>
-                    </div>
-                    <div class="status-row">
-                        <span>Email verification</span>
-                        <strong>Template routed</strong>
-                    </div>
-                    <div class="status-row">
-                        <span>2FA OTP</span>
-                        <strong>Template routed</strong>
-                    </div>
-                    <div class="status-footer">
-                        Brevo delivery with GlitchTip error reporting
-                    </div>
-                </div>
             </div>
         </div>
     </div>

@@ -4,9 +4,15 @@
     ViewData["Title"] = "Edit template";
 }
 
-<h1 class="h3 mb-3">Edit template</h1>
+<div class="container">
+<div class="page-header">
+    <div>
+        <p class="page-kicker">Razor email bodies</p>
+        <h1 class="page-title">Edit template</h1>
+    </div>
+</div>
 
-<form asp-action="Edit" method="post" class="vstack gap-3">
+<form asp-action="Edit" method="post" class="form-card vstack gap-3">
     <input type="hidden" asp-for="Id"/>
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <partial name="_Form" model="Model"/>
@@ -15,6 +21,7 @@
         <a class="btn btn-outline-secondary" asp-action="Index">Cancel</a>
     </div>
 </form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial"/>

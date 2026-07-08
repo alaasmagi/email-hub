@@ -4,12 +4,17 @@
     ViewData["Title"] = "Sender identities";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">Sender identities</h1>
+<div class="container">
+<div class="page-header">
+    <div>
+        <p class="page-kicker">From address routing</p>
+        <h1 class="page-title">Sender identities</h1>
+    </div>
     <a class="btn btn-primary" asp-action="Create">Create</a>
 </div>
 
-<table class="table table-striped align-middle">
+<div class="table-card">
+<table class="table table-hover align-middle">
     <thead>
     <tr>
         <th>Email type</th>
@@ -28,7 +33,9 @@
             <td>@sender.FromAddress</td>
             <td>@sender.DisplayName</td>
             <td>@sender.ReplyTo</td>
-            <td>@(sender.IsActive ? "Yes" : "No")</td>
+            <td>
+                <span class="status-badge @(sender.IsActive ? "is-active" : "")">@(sender.IsActive ? "Active" : "Inactive")</span>
+            </td>
             <td class="text-end">
                 <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@sender.Id">Edit</a>
             </td>
@@ -36,3 +43,5 @@
     }
     </tbody>
 </table>
+</div>
+</div>

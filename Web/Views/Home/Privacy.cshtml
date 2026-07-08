@@ -1,6 +1,34 @@
-﻿@{
+@{
     ViewData["Title"] = "Privacy Policy";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="container">
+    <div class="content-card">
+        <p class="page-kicker">Policy</p>
+        <h1 class="page-title mb-3">Privacy policy</h1>
+        <p class="text-secondary">
+            Email Hub is a transactional email microservice. It processes email requests from authorized services and keeps the operational data needed to render, send, and audit deliveries.
+        </p>
+
+        <h2 class="h5 mt-4 mb-3">What is stored</h2>
+        <ul class="text-secondary mb-0">
+            <li>Service name, email type, recipients, sender identity, reply-to address, subject, delivery status, and timestamps.</li>
+            <li>Template and sender configuration used to render transactional emails consistently.</li>
+            <li>Error and delivery diagnostics needed to troubleshoot failed or delayed messages.</li>
+        </ul>
+
+        <h2 class="h5 mt-4 mb-3">How email data is used</h2>
+        <ul class="text-secondary mb-0">
+            <li>Email payloads are used to render and send the requested transactional message.</li>
+            <li>Delivery metadata is used for operational review, debugging, abuse investigation, and reliability monitoring.</li>
+            <li>Email content is sent to the configured delivery provider so the message can be delivered to the recipient.</li>
+        </ul>
+
+        <h2 class="h5 mt-4 mb-3">Access and retention</h2>
+        <ul class="text-secondary mb-0">
+            <li>Administrative access is restricted to authenticated operators.</li>
+            <li>Operational logs and diagnostics should avoid storing secrets and should be retained only as long as needed for support, audit, and reliability.</li>
+            <li>Downstream services remain responsible for only sending email data they are allowed to process.</li>
+        </ul>
+    </div>
+</div>

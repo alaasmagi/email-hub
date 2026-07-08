@@ -4,9 +4,16 @@
     ViewData["Title"] = "Email details";
 }
 
-<h1 class="h3 mb-3">Email details</h1>
+<div class="container">
+<div class="page-header">
+    <div>
+        <p class="page-kicker">Delivery log</p>
+        <h1 class="page-title">Email details</h1>
+    </div>
+</div>
 
-<dl class="row">
+<div class="details-card">
+<dl class="details-list row">
     <dt class="col-sm-3">Service</dt>
     <dd class="col-sm-9">@Model.ServiceName</dd>
 
@@ -30,3 +37,5 @@
 </dl>
 
 <a class="btn btn-outline-secondary" asp-action="Index">Back</a>
+</div>
+</div>

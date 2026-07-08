@@ -4,9 +4,16 @@
     ViewData["Title"] = "Emails";
 }
 
-<h1 class="h3 mb-3">Emails</h1>
+<div class="container">
+<div class="page-header">
+    <div>
+        <p class="page-kicker">Delivery log</p>
+        <h1 class="page-title">Emails</h1>
+    </div>
+</div>
 
-<table class="table table-striped align-middle">
+<div class="table-card">
+<table class="table table-hover align-middle">
     <thead>
     <tr>
         <th>Service</th>
@@ -26,7 +33,7 @@
             <td>@email.EmailType</td>
             <td>@email.ToRecipients</td>
             <td>@email.Subject</td>
-            <td>@email.Status</td>
+            <td><span class="status-badge">@email.Status</span></td>
             <td>@email.SentAt?.ToString("u")</td>
             <td class="text-end">
                 <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@email.Id">Details</a>
@@ -35,3 +42,5 @@
     }
     </tbody>
 </table>
+</div>
+</div>

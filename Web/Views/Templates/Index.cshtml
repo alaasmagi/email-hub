@@ -4,12 +4,17 @@
     ViewData["Title"] = "Templates";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">Templates</h1>
+<div class="container">
+<div class="page-header">
+    <div>
+        <p class="page-kicker">Razor email bodies</p>
+        <h1 class="page-title">Templates</h1>
+    </div>
     <a class="btn btn-primary" asp-action="Create">Create</a>
 </div>
 
-<table class="table table-striped align-middle">
+<div class="table-card">
+<table class="table table-hover align-middle">
     <thead>
     <tr>
         <th>Sender identity</th>
@@ -26,7 +31,9 @@
             <td><code>@template.SenderIdentityId</code></td>
             <td>@template.LanguageCode</td>
             <td>@template.SubjectTemplate</td>
-            <td>@(template.IsActive ? "Yes" : "No")</td>
+            <td>
+                <span class="status-badge @(template.IsActive ? "is-active" : "")">@(template.IsActive ? "Active" : "Inactive")</span>
+            </td>
             <td class="text-end">
                 <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@template.Id">Edit</a>
             </td>
@@ -34,3 +41,5 @@
     }
     </tbody>
 </table>
+</div>
+</div>

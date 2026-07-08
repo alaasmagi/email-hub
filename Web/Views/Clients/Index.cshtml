@@ -4,12 +4,17 @@
     ViewData["Title"] = "Clients";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">Clients</h1>
+<div class="container">
+<div class="page-header">
+    <div>
+        <p class="page-kicker">Service mappings</p>
+        <h1 class="page-title">Clients</h1>
+    </div>
     <a class="btn btn-primary" asp-action="Create">Create</a>
 </div>
 
-<table class="table table-striped align-middle">
+<div class="table-card">
+<table class="table table-hover align-middle">
     <thead>
     <tr>
         <th>Service name</th>
@@ -24,7 +29,9 @@
         <tr>
             <td>@client.ServiceName</td>
             <td>@client.DisplayName</td>
-            <td>@(client.IsActive ? "Yes" : "No")</td>
+            <td>
+                <span class="status-badge @(client.IsActive ? "is-active" : "")">@(client.IsActive ? "Active" : "Inactive")</span>
+            </td>
             <td class="text-end">
                 <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@client.Id">Edit</a>
             </td>
@@ -32,3 +39,5 @@
     }
     </tbody>
 </table>
+</div>
+</div>
