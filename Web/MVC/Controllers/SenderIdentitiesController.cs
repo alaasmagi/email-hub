@@ -1,3 +1,4 @@
+using Base.Contracts.DataAccess;
 using Contracts.DataAccess;
 using Domain;
 using Microsoft.AspNetCore.Authorization;
@@ -11,13 +12,16 @@ public class SenderIdentitiesController : Controller
 {
     private readonly IClientRepository _clientRepository;
     private readonly ISenderIdentityRepository _senderIdentityRepository;
+    private readonly IBaseUow _uow;
 
     public SenderIdentitiesController(
         IClientRepository clientRepository,
-        ISenderIdentityRepository senderIdentityRepository)
+        ISenderIdentityRepository senderIdentityRepository,
+        IBaseUow uow)
     {
         _clientRepository = clientRepository;
         _senderIdentityRepository = senderIdentityRepository;
+        _uow = uow;
     }
 
     public async Task<IActionResult> Index()
@@ -42,7 +46,15 @@ public class SenderIdentitiesController : Controller
             return View(senderIdentity);
         }
 
-        await _senderIdentityRepository.CreateAsync(senderIdentity);
+        var response = await _senderIdentityRepository.CreateAsync(senderIdentity);
+        if (!response.Successful)
+        {
+            ModelState.AddModelError(string.Empty, response.Error!.Message);
+            await LoadClientsAsync();
+            return View(senderIdentity);
+        }
+
+        await _uow.SaveChangesAsync();
 
         return RedirectToAction(nameof(Index));
     }
@@ -74,7 +86,15 @@ public class SenderIdentitiesController : Controller
             return View(senderIdentity);
         }
 
-        await _senderIdentityRepository.UpdateAsync(id, senderIdentity, null, Guid.Empty);
+        var response = await _senderIdentityRepository.UpdateAsync(id, senderIdentity, null, Guid.Empty);
+        if (!response.Successful)
+        {
+            ModelState.AddModelError(string.Empty, response.Error!.Message);
+            await LoadClientsAsync();
+            return View(senderIdentity);
+        }
+
+        await _uow.SaveChangesAsync();
 
         return RedirectToAction(nameof(Index));
     }

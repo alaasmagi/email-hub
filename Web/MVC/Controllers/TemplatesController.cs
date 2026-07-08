@@ -1,3 +1,4 @@
+using Base.Contracts.DataAccess;
 using Contracts.DataAccess;
 using Domain;
 using Microsoft.AspNetCore.Authorization;
@@ -11,13 +12,16 @@ public class TemplatesController : Controller
 {
     private readonly ISenderIdentityRepository _senderIdentityRepository;
     private readonly ITemplateRepository _templateRepository;
+    private readonly IBaseUow _uow;
 
     public TemplatesController(
         ISenderIdentityRepository senderIdentityRepository,
-        ITemplateRepository templateRepository)
+        ITemplateRepository templateRepository,
+        IBaseUow uow)
     {
         _senderIdentityRepository = senderIdentityRepository;
         _templateRepository = templateRepository;
+        _uow = uow;
     }
 
     public async Task<IActionResult> Index()
@@ -42,7 +46,15 @@ public class TemplatesController : Controller
             return View(template);
         }
 
-        await _templateRepository.CreateAsync(template);
+        var response = await _templateRepository.CreateAsync(template);
+        if (!response.Successful)
+        {
+            ModelState.AddModelError(string.Empty, response.Error!.Message);
+            await LoadSenderIdentitiesAsync();
+            return View(template);
+        }
+
+        await _uow.SaveChangesAsync();
 
         return RedirectToAction(nameof(Index));
     }
@@ -74,7 +86,15 @@ public class TemplatesController : Controller
             return View(template);
         }
 
-        await _templateRepository.UpdateAsync(id, template, null, Guid.Empty);
+        var response = await _templateRepository.UpdateAsync(id, template, null, Guid.Empty);
+        if (!response.Successful)
+        {
+            ModelState.AddModelError(string.Empty, response.Error!.Message);
+            await LoadSenderIdentitiesAsync();
+            return View(template);
+        }
+
+        await _uow.SaveChangesAsync();
 
         return RedirectToAction(nameof(Index));
     }

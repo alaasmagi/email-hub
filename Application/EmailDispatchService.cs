@@ -1,3 +1,4 @@
+using Base.Contracts.DataAccess;
 using Base.Contracts.DTO;
 using Base.DTO;
 using Contracts.Application;
@@ -15,6 +16,7 @@ public class EmailDispatchService : IEmailDispatchService
     private readonly ISenderIdentityRepository _senderIdentityRepository;
     private readonly ITemplateRepository _templateRepository;
     private readonly IEmailRepository _emailRepository;
+    private readonly IBaseUow _uow;
     private readonly IEmailTemplateRenderer _templateRenderer;
     private readonly IEmailSender _emailSender;
     private readonly ILogger<EmailDispatchService> _logger;
@@ -24,6 +26,7 @@ public class EmailDispatchService : IEmailDispatchService
         ISenderIdentityRepository senderIdentityRepository,
         ITemplateRepository templateRepository,
         IEmailRepository emailRepository,
+        IBaseUow uow,
         IEmailTemplateRenderer templateRenderer,
         IEmailSender emailSender,
         ILogger<EmailDispatchService> logger)
@@ -32,6 +35,7 @@ public class EmailDispatchService : IEmailDispatchService
         _senderIdentityRepository = senderIdentityRepository;
         _templateRepository = templateRepository;
         _emailRepository = emailRepository;
+        _uow = uow;
         _templateRenderer = templateRenderer;
         _emailSender = emailSender;
         _logger = logger;
@@ -129,7 +133,21 @@ public class EmailDispatchService : IEmailDispatchService
             Status = EEmailStatus.Pending
         };
 
-        await _emailRepository.CreateAsync(email);
+        var createEmailResponse = await _emailRepository.CreateAsync(email);
+        if (!createEmailResponse.Successful || createEmailResponse.Value is null)
+        {
+            _logger.LogError(
+                "Email dispatch failed because email record could not be created. ServiceName: {ServiceName}, EmailType: {EmailType}, CorrelationId: {CorrelationId}, ErrorMessage: {ErrorMessage}",
+                request.ServiceName,
+                request.EmailType,
+                request.CorrelationId,
+                createEmailResponse.Error!.Message);
+
+            return Failure(createEmailResponse.Error.Message);
+        }
+
+        email = createEmailResponse.Value;
+        await _uow.SaveChangesAsync();
 
         _logger.LogInformation(
             "Email record created. EmailId: {EmailId}, ServiceName: {ServiceName}, EmailType: {EmailType}, CorrelationId: {CorrelationId}",
@@ -160,7 +178,19 @@ public class EmailDispatchService : IEmailDispatchService
             email.SentAt = DateTime.UtcNow;
         }
 
-        await _emailRepository.UpdateAsync(email.Id, email, null, Guid.Empty);
+        var updateEmailResponse = await _emailRepository.UpdateAsync(email.Id, email, null, Guid.Empty);
+        if (!updateEmailResponse.Successful)
+        {
+            _logger.LogError(
+                "Email dispatch failed because email record status could not be updated. EmailId: {EmailId}, CorrelationId: {CorrelationId}, ErrorMessage: {ErrorMessage}",
+                email.Id,
+                request.CorrelationId,
+                updateEmailResponse.Error!.Message);
+
+            return Failure(updateEmailResponse.Error.Message);
+        }
+
+        await _uow.SaveChangesAsync();
 
         if (sendResult.Successful)
         {

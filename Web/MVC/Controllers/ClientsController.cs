@@ -1,3 +1,4 @@
+using Base.Contracts.DataAccess;
 using Contracts.DataAccess;
 using Domain;
 using Microsoft.AspNetCore.Authorization;
@@ -9,10 +10,12 @@ namespace Web.MVC.Controllers;
 public class ClientsController : Controller
 {
     private readonly IClientRepository _clientRepository;
+    private readonly IBaseUow _uow;
 
-    public ClientsController(IClientRepository clientRepository)
+    public ClientsController(IClientRepository clientRepository, IBaseUow uow)
     {
         _clientRepository = clientRepository;
+        _uow = uow;
     }
 
     public async Task<IActionResult> Index()
@@ -35,7 +38,14 @@ public class ClientsController : Controller
             return View(client);
         }
 
-        await _clientRepository.CreateAsync(client);
+        var response = await _clientRepository.CreateAsync(client);
+        if (!response.Successful)
+        {
+            ModelState.AddModelError(string.Empty, response.Error!.Message);
+            return View(client);
+        }
+
+        await _uow.SaveChangesAsync();
 
         return RedirectToAction(nameof(Index));
     }
@@ -65,7 +75,14 @@ public class ClientsController : Controller
             return View(client);
         }
 
-        await _clientRepository.UpdateAsync(id, client, null, Guid.Empty);
+        var response = await _clientRepository.UpdateAsync(id, client, null, Guid.Empty);
+        if (!response.Successful)
+        {
+            ModelState.AddModelError(string.Empty, response.Error!.Message);
+            return View(client);
+        }
+
+        await _uow.SaveChangesAsync();
 
         return RedirectToAction(nameof(Index));
     }

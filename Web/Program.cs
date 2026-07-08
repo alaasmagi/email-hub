@@ -1,4 +1,6 @@
 using Application;
+using Base.Contracts.DataAccess;
+using Base.DataAccess.EF;
 using Contracts.Application;
 using Contracts.DataAccess;
 using Contracts.External;
@@ -41,6 +43,7 @@ builder.Services.AddScoped<IClientRepository, ClientRepository>();
 builder.Services.AddScoped<ISenderIdentityRepository, SenderIdentityRepository>();
 builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
 builder.Services.AddScoped<IEmailRepository, EmailRepository>();
+builder.Services.AddScoped<IBaseUow, BaseUow<AppDbContext>>();
 
 builder.Services.AddScoped<IKeycloakEmailEventMapper, KeycloakEmailEventMapper>();
 builder.Services.AddScoped<IEmailDispatchService, EmailDispatchService>();
