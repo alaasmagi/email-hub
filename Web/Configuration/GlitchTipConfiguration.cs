@@ -11,9 +11,9 @@ public static class GlitchTipConfiguration
             sentryBuilder.AddSentryOptions(options =>
             {
                 options.Dsn = Env.GetRequired("GLITCHTIP_DSN");
-                options.Environment = Env.Get("GLITCHTIP_ENVIRONMENT") ?? "production";
-                options.Release = Env.Get("GLITCHTIP_RELEASE");
-                options.SampleRate = (float)Env.GetDouble("GLITCHTIP_SAMPLE_RATE", 1.0);
+                options.Environment = "production";
+                options.Release = Env.GetRequired("GLITCHTIP_RELEASE");
+                options.SampleRate = 1.0f;
 
                 options.MinimumEventLevel = LogLevel.Error;
                 options.MinimumBreadcrumbLevel = LogLevel.Warning;

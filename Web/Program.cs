@@ -20,17 +20,10 @@ using Web.Configuration;
 var builder = WebApplication.CreateBuilder(args);
 
 Env.LoadFile(builder.Environment.ContentRootPath);
-Env.EnsureDefault("GLITCHTIP_ENVIRONMENT", "production");
 builder.ConfigureApplicationLogging();
 builder.ConfigureGlitchTip();
 
-var connectionString =
-    Env.Get("DATABASE_CONNECTION_STRING") ??
-    Env.Get("CONNECTION_STRING");
-if (string.IsNullOrWhiteSpace(connectionString))
-{
-    throw new InvalidOperationException("DATABASE_CONNECTION_STRING must be configured in .env.");
-}
+var connectionString = Env.GetRequired("DATABASE_CONNECTION_STRING");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -57,18 +50,15 @@ builder.Services.AddSingleton<IEmailTemplateRenderer>(provider =>
 
 builder.Services.Configure<BrevoEmailSenderOptions>(options =>
 {
-    options.ApiKey = Env.Get("BREVO_API_KEY") ?? string.Empty;
-    options.BaseUrl = Env.Get("BREVO_BASE_URL") ?? options.BaseUrl;
+    options.ApiKey = Env.GetRequired("BREVO_API_KEY");
+    options.BaseUrl = Env.GetRequired("BREVO_BASE_URL");
 });
 
 builder.Services.Configure<RabbitMqEmailConsumerOptions>(options =>
 {
-    options.Enabled = Env.GetBool("RABBITMQ_ENABLED", options.Enabled);
     options.Uri = Env.GetRequired("RABBITMQ_URI");
     options.ExchangeNames = Env.GetRequiredList("RABBITMQ_EXCHANGES");
     options.QueueName = Env.GetRequired("RABBITMQ_EMAIL_QUEUE");
-    options.PrefetchCount = Env.GetUShort("RABBITMQ_EMAIL_PREFETCH", options.PrefetchCount);
-    options.RetryDelaySeconds = Env.GetInt("RABBITMQ_RETRY_DELAY_SECONDS", options.RetryDelaySeconds);
 });
 
 builder.Services.AddHttpClient<BrevoEmailSender>();
@@ -88,7 +78,7 @@ builder.Services.AddHostedService(provider =>
 var keycloakAuthority = Env.GetRequired("KEYCLOAK_AUTHORITY");
 var keycloakClientId = Env.GetRequired("KEYCLOAK_CLIENT_ID");
 var keycloakClientSecret = Env.GetRequired("KEYCLOAK_CLIENT_SECRET");
-var requireHttpsMetadata = Env.GetBool("KEYCLOAK_REQUIRE_HTTPS_METADATA", true);
+var requireHttpsMetadata = keycloakAuthority.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
 
 builder.Services
     .AddAuthentication(options =>
@@ -108,7 +98,8 @@ builder.Services
         options.ClientId = keycloakClientId;
         options.ClientSecret = keycloakClientSecret;
         options.RequireHttpsMetadata = requireHttpsMetadata;
-        options.CallbackPath = Env.Get("KEYCLOAK_CALLBACK_PATH") ?? "/signin-oidc";
+        options.CallbackPath = "/signin-oidc";
+        options.SignedOutCallbackPath = "/signout-callback-oidc";
         options.ResponseType = OpenIdConnectResponseType.Code;
         options.PushedAuthorizationBehavior = PushedAuthorizationBehavior.Disable;
         options.SaveTokens = true;

@@ -35,12 +35,6 @@ public class KeycloakEmailEventConsumer : BackgroundService, IKeycloakEmailEvent
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (!_options.Enabled)
-        {
-            _logger.LogInformation("RabbitMQ email consumer is disabled.");
-            return;
-        }
-
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -62,23 +56,10 @@ public class KeycloakEmailEventConsumer : BackgroundService, IKeycloakEmailEvent
 
                 _logger.LogDebug(exception, "RabbitMQ email consumer startup failure details.");
 
-                if (LooksLikeHttpUrl(_options.HostName) || LooksLikeHttpUrl(_options.Uri))
+                if (LooksLikeHttpUrl(_options.Uri))
                 {
                     _logger.LogWarning(
-                        "RabbitMQ_HOST/RABBITMQ_URI must be an AMQP endpoint, not an HTTP management URL. Use amqp:// or amqps://, or host plus AMQP port 5672/5671.");
-                }
-
-                if (_options.Port is 15672 or 15671)
-                {
-                    _logger.LogWarning(
-                        "RabbitMQ port {Port} is normally the management UI port. Use AMQP port 5672 or AMQPS port 5671.",
-                        _options.Port);
-                }
-
-                if (_options.Port == 5671 && !_options.UseTls && string.IsNullOrWhiteSpace(_options.Uri))
-                {
-                    _logger.LogWarning(
-                        "RabbitMQ port 5671 usually requires TLS. Set RABBITMQ_USE_TLS=true or use an amqps:// RABBITMQ_URI.");
+                        "RABBITMQ_URI must be an AMQP endpoint, not an HTTP management URL. Use amqp:// or amqps://.");
                 }
 
                 _logger.LogInformation(
@@ -157,38 +138,17 @@ public class KeycloakEmailEventConsumer : BackgroundService, IKeycloakEmailEvent
 
     private ConnectionFactory CreateConnectionFactory()
     {
-        if (!string.IsNullOrWhiteSpace(_options.Uri))
-        {
-            var uri = new Uri(_options.Uri);
-            var factoryFromUri = new ConnectionFactory
-            {
-                Uri = uri,
-                AutomaticRecoveryEnabled = true
-            };
-
-            if (uri.Scheme.Equals("amqps", StringComparison.OrdinalIgnoreCase))
-            {
-                factoryFromUri.Ssl.Enabled = true;
-                factoryFromUri.Ssl.ServerName = uri.Host;
-            }
-
-            return factoryFromUri;
-        }
-
+        var uri = new Uri(_options.Uri!);
         var factory = new ConnectionFactory
         {
-            HostName = _options.HostName,
-            Port = _options.Port,
-            UserName = _options.UserName,
-            Password = _options.Password,
-            VirtualHost = _options.VirtualHost,
+            Uri = uri,
             AutomaticRecoveryEnabled = true
         };
 
-        if (_options.UseTls)
+        if (uri.Scheme.Equals("amqps", StringComparison.OrdinalIgnoreCase))
         {
             factory.Ssl.Enabled = true;
-            factory.Ssl.ServerName = _options.HostName;
+            factory.Ssl.ServerName = uri.Host;
         }
 
         return factory;
@@ -196,13 +156,8 @@ public class KeycloakEmailEventConsumer : BackgroundService, IKeycloakEmailEvent
 
     private string GetEndpointDescription()
     {
-        if (!string.IsNullOrWhiteSpace(_options.Uri))
-        {
-            var uri = new Uri(_options.Uri);
-            return $"{uri.Scheme}://{uri.Host}:{uri.Port}{uri.AbsolutePath}";
-        }
-
-        return $"{_options.HostName}:{_options.Port}";
+        var uri = new Uri(_options.Uri!);
+        return $"{uri.Scheme}://{uri.Host}:{uri.Port}{uri.AbsolutePath}";
     }
 
     private static bool LooksLikeHttpUrl(string? value)

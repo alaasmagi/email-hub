@@ -12,7 +12,7 @@ concurrency:
 
 env:
   IMAGE_NAME: alaasmagi-email-hub
-  REMOTE_APP_DIR: /opt/alaasmagi-email-hub
+  REMOTE_APP_DIR: /infra/email-hub
   APP_PORT: "8080"
   HOST_PORT: "8080"
 
@@ -42,28 +42,19 @@ jobs:
 
       - name: Create runtime env file from GitHub secrets
         env:
-          APP_PORT: ${{ secrets.CONTAINER_PORT || secrets.APP_PORT || env.APP_PORT }}
-          HOST_PORT: ${{ secrets.HOST_PORT || secrets.APP_PORT || env.HOST_PORT }}
+          APP_PORT: ${{ env.APP_PORT }}
+          HOST_PORT: ${{ env.HOST_PORT }}
           DATABASE_CONNECTION_STRING: ${{ secrets.DATABASE_CONNECTION_STRING }}
           RABBITMQ_URI: ${{ secrets.RABBITMQ_URI }}
           RABBITMQ_EXCHANGES: ${{ secrets.RABBITMQ_EXCHANGES }}
           RABBITMQ_EMAIL_QUEUE: ${{ secrets.RABBITMQ_EMAIL_QUEUE }}
-          RABBITMQ_EMAIL_PREFETCH: ${{ secrets.RABBITMQ_EMAIL_PREFETCH }}
-          RABBITMQ_RETRY_DELAY_SECONDS: ${{ secrets.RABBITMQ_RETRY_DELAY_SECONDS }}
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
           BREVO_BASE_URL: ${{ secrets.BREVO_BASE_URL }}
           GLITCHTIP_DSN: ${{ secrets.GLITCHTIP_DSN }}
-          GLITCHTIP_ENVIRONMENT: ${{ secrets.GLITCHTIP_ENVIRONMENT }}
           GLITCHTIP_RELEASE: ${{ secrets.GLITCHTIP_RELEASE }}
-          GLITCHTIP_SAMPLE_RATE: ${{ secrets.GLITCHTIP_SAMPLE_RATE }}
           KEYCLOAK_AUTHORITY: ${{ secrets.KEYCLOAK_AUTHORITY }}
           KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_CLIENT_ID }}
           KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
-          KEYCLOAK_CALLBACK_PATH: ${{ secrets.KEYCLOAK_CALLBACK_PATH }}
-          KEYCLOAK_REQUIRE_HTTPS_METADATA: ${{ secrets.KEYCLOAK_REQUIRE_HTTPS_METADATA }}
-          LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
-          MICROSOFT_LOG_LEVEL: ${{ secrets.MICROSOFT_LOG_LEVEL }}
-          ENTITY_FRAMEWORK_LOG_LEVEL: ${{ secrets.ENTITY_FRAMEWORK_LOG_LEVEL }}
         run: |
           set -euo pipefail
 
@@ -72,19 +63,12 @@ jobs:
           : "${RABBITMQ_EXCHANGES:?RABBITMQ_EXCHANGES is required}"
           : "${RABBITMQ_EMAIL_QUEUE:?RABBITMQ_EMAIL_QUEUE is required}"
           : "${BREVO_API_KEY:?BREVO_API_KEY is required}"
+          : "${BREVO_BASE_URL:?BREVO_BASE_URL is required}"
           : "${GLITCHTIP_DSN:?GLITCHTIP_DSN is required}"
+          : "${GLITCHTIP_RELEASE:?GLITCHTIP_RELEASE is required}"
           : "${KEYCLOAK_AUTHORITY:?KEYCLOAK_AUTHORITY is required}"
           : "${KEYCLOAK_CLIENT_ID:?KEYCLOAK_CLIENT_ID is required}"
           : "${KEYCLOAK_CLIENT_SECRET:?KEYCLOAK_CLIENT_SECRET is required}"
-
-          write_optional() {
-            local key="$1"
-            local value="${2:-}"
-
-            if [ -n "${value}" ]; then
-              printf '%s=%s\n' "${key}" "${value}"
-            fi
-          }
 
           {
             printf 'ASPNETCORE_ENVIRONMENT=%s\n' 'Production'
@@ -97,26 +81,16 @@ jobs:
             printf 'RABBITMQ_URI=%s\n' "${RABBITMQ_URI}"
             printf 'RABBITMQ_EXCHANGES=%s\n' "${RABBITMQ_EXCHANGES}"
             printf 'RABBITMQ_EMAIL_QUEUE=%s\n' "${RABBITMQ_EMAIL_QUEUE}"
-            write_optional 'RABBITMQ_EMAIL_PREFETCH' "${RABBITMQ_EMAIL_PREFETCH:-}"
-            write_optional 'RABBITMQ_RETRY_DELAY_SECONDS' "${RABBITMQ_RETRY_DELAY_SECONDS:-}"
 
             printf 'BREVO_API_KEY=%s\n' "${BREVO_API_KEY}"
-            write_optional 'BREVO_BASE_URL' "${BREVO_BASE_URL:-}"
+            printf 'BREVO_BASE_URL=%s\n' "${BREVO_BASE_URL}"
 
             printf 'GLITCHTIP_DSN=%s\n' "${GLITCHTIP_DSN}"
-            printf 'GLITCHTIP_ENVIRONMENT=%s\n' "${GLITCHTIP_ENVIRONMENT:-production}"
-            write_optional 'GLITCHTIP_RELEASE' "${GLITCHTIP_RELEASE:-}"
-            write_optional 'GLITCHTIP_SAMPLE_RATE' "${GLITCHTIP_SAMPLE_RATE:-}"
+            printf 'GLITCHTIP_RELEASE=%s\n' "${GLITCHTIP_RELEASE}"
 
             printf 'KEYCLOAK_AUTHORITY=%s\n' "${KEYCLOAK_AUTHORITY}"
             printf 'KEYCLOAK_CLIENT_ID=%s\n' "${KEYCLOAK_CLIENT_ID}"
             printf 'KEYCLOAK_CLIENT_SECRET=%s\n' "${KEYCLOAK_CLIENT_SECRET}"
-            write_optional 'KEYCLOAK_CALLBACK_PATH' "${KEYCLOAK_CALLBACK_PATH:-}"
-            write_optional 'KEYCLOAK_REQUIRE_HTTPS_METADATA' "${KEYCLOAK_REQUIRE_HTTPS_METADATA:-}"
-
-            write_optional 'LOG_LEVEL' "${LOG_LEVEL:-}"
-            write_optional 'MICROSOFT_LOG_LEVEL' "${MICROSOFT_LOG_LEVEL:-}"
-            write_optional 'ENTITY_FRAMEWORK_LOG_LEVEL' "${ENTITY_FRAMEWORK_LOG_LEVEL:-}"
           } > .env
 
           chmod 600 .env
@@ -158,8 +132,8 @@ jobs:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_PORT: ${{ secrets.VPS_PORT }}
-          APP_PORT: ${{ secrets.CONTAINER_PORT || secrets.APP_PORT || env.APP_PORT }}
-          HOST_PORT: ${{ secrets.HOST_PORT || secrets.APP_PORT || env.HOST_PORT }}
+          APP_PORT: ${{ env.APP_PORT }}
+          HOST_PORT: ${{ env.HOST_PORT }}
         run: |
           set -euo pipefail
 

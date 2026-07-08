@@ -6,12 +6,8 @@ public static class LoggingConfiguration
 {
     public static void ConfigureApplicationLogging(this WebApplicationBuilder builder)
     {
-        var defaultLevel = GetLogLevel("LOG_LEVEL", LogLevel.Information);
-        var microsoftLevel = GetLogLevel("MICROSOFT_LOG_LEVEL", LogLevel.Warning);
-        var entityFrameworkLevel = GetLogLevel("ENTITY_FRAMEWORK_LOG_LEVEL", LogLevel.Warning);
-
         builder.Logging.ClearProviders();
-        builder.Logging.SetMinimumLevel(defaultLevel);
+        builder.Logging.SetMinimumLevel(LogLevel.Information);
         builder.Logging.AddSimpleConsole(options =>
         {
             options.SingleLine = true;
@@ -21,16 +17,8 @@ public static class LoggingConfiguration
             options.IncludeScopes = true;
         });
 
-        builder.Logging.AddFilter("Microsoft", microsoftLevel);
-        builder.Logging.AddFilter("Microsoft.AspNetCore", microsoftLevel);
-        builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", entityFrameworkLevel);
-    }
-
-    private static LogLevel GetLogLevel(string name, LogLevel fallback)
-    {
-        var value = Env.Get(name);
-        return Enum.TryParse<LogLevel>(value, ignoreCase: true, out var level)
-            ? level
-            : fallback;
+        builder.Logging.AddFilter("Microsoft", LogLevel.Warning);
+        builder.Logging.AddFilter("Microsoft.AspNetCore", LogLevel.Warning);
+        builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
     }
 }
