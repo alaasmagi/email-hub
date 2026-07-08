@@ -1,6 +1,4 @@
-using Contracts.External;
-
-namespace External.RazorLight;
+namespace Contracts.External;
 
 public interface IRazorEmailTemplateRenderer : IEmailTemplateRenderer
 {

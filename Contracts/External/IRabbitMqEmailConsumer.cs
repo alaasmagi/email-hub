@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Hosting;
 
-namespace External.RabbitMQ;
+namespace Contracts.External;
 
 public interface IRabbitMqEmailConsumer : IHostedService
 {

@@ -6,6 +6,7 @@ using DataAccess;
 using DataAccess.Context;
 using DTO.DataAccess.Mappers;
 using External.Brevo;
+using External.Keycloak;
 using External.RazorLight;
 using External.RabbitMQ;
 using Microsoft.AspNetCore.Authentication.Cookies;

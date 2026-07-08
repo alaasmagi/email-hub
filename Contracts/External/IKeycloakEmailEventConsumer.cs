@@ -1,6 +1,4 @@
-using External.RabbitMQ;
-
-namespace External.RabbitMQ;
+namespace Contracts.External;
 
 public interface IKeycloakEmailEventConsumer : IRabbitMqEmailConsumer
 {

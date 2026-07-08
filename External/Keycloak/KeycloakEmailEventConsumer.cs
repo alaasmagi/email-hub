@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Contracts.Application;
+using Contracts.External;
 using Contracts.External.Models;
+using External.RabbitMQ;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -8,7 +10,7 @@ using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace External.RabbitMQ;
+namespace External.Keycloak;
 
 public class KeycloakEmailEventConsumer : BackgroundService, IKeycloakEmailEventConsumer
 {
