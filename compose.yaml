@@ -1,0 +1,15 @@
+services:
+  email-hub:
+    image: ${IMAGE_NAME}:${IMAGE_TAG}
+    container_name: email-hub
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${HOST_PORT}:${APP_PORT}"
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
