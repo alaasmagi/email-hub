@@ -169,7 +169,7 @@ jobs:
 
           chmod 600 .env
 
-          $DOCKER network inspect proxy >/dev/null 2>&1 || $DOCKER network create proxy
+          $DOCKER network inspect infra-network >/dev/null 2>&1 || $DOCKER network create infra-network
 
           export IMAGE_NAME IMAGE_TAG APP_PORT HOST_PORT
           "${COMPOSE_CMD[@]}" --env-file .env -f compose.yaml up -d --remove-orphans

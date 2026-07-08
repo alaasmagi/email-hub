@@ -8,8 +8,8 @@ services:
     ports:
       - "${HOST_PORT}:${APP_PORT}"
     networks:
-      - proxy
+      - infra-network
 
 networks:
-  proxy:
+  infra-network:
     external: true
