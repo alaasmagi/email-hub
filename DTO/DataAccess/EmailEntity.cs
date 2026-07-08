@@ -4,7 +4,7 @@ using Domain;
 
 namespace DTO.DataAccess;
 
-public class EmailEntity : BaseEntityUserWithMeta
+public class EmailEntity : BaseEntityWithMeta
 {
     [MaxLength(64)]
     public string ServiceName { get; set; } = default!;
