@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 
 namespace External.Brevo;
 
-public class BrevoEmailSender : IBrevoEmailSender
+public class BrevoEmailSender : IEmailSender
 {
     private readonly HttpClient _httpClient;
     private readonly BrevoEmailSenderOptions _options;

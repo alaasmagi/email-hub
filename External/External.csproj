@@ -8,11 +8,11 @@
 
     <ItemGroup>
       <Folder Include="Brevo\" />
-      <Folder Include="RabbitMQ\" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="RabbitMQ.Client" Version="7.1.2" />
+      <PackageReference Include="alaasmagi.Base.Message.RabbitMQ" Version="1.1.7" />
+      <PackageReference Include="alaasmagi.Base.Keycloak" Version="1.1.7" />
       <PackageReference Include="RazorLight" Version="2.3.1" />
     </ItemGroup>
 

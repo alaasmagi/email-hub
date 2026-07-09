@@ -109,18 +109,9 @@ public class EmailDispatchService : IEmailDispatchService
             return Failure($"Active template '{request.ServiceName}/{request.EmailType}/{languageCode}' was not found.");
         }
 
-        var renderModel = new EmailRenderModel
-        {
-            ServiceName = request.ServiceName,
-            EmailType = request.EmailType,
-            ToEmail = request.ToEmail,
-            LanguageCode = languageCode,
-            Variables = request.Variables
-        };
-
         var rendered = await _templateRenderer.RenderAsync(
             template,
-            renderModel,
+            request.Content,
             cancellationToken);
 
         var email = new Email

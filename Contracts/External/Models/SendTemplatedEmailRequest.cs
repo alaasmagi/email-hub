@@ -7,5 +7,9 @@ public class SendTemplatedEmailRequest
     public string ToEmail { get; set; } = default!;
     public string LanguageCode { get; set; } = "en";
     public string? CorrelationId { get; set; }
-    public Dictionary<string, string> Variables { get; set; } = new();
+
+    /// <summary>
+    /// Strongly-typed event content payload used as the model when rendering the template.
+    /// </summary>
+    public object Content { get; set; } = default!;
 }

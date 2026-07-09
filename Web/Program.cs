@@ -1,6 +1,9 @@
+using System.Text.Json;
 using Application;
 using Base.Contracts.DataAccess;
+using Base.Contracts.Message;
 using Base.DataAccess.EF;
+using Base.Message.RabbitMQ;
 using Contracts.Application;
 using Contracts.DataAccess;
 using Contracts.External;
@@ -8,9 +11,8 @@ using DataAccess;
 using DataAccess.Context;
 using DTO.DataAccess.Mappers;
 using External.Brevo;
-using External.Keycloak;
-using External.RazorLight;
 using External.RabbitMQ;
+using External.RazorLight;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -45,13 +47,8 @@ builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
 builder.Services.AddScoped<IEmailRepository, EmailRepository>();
 builder.Services.AddScoped<IBaseUow, BaseUow<AppDbContext>>();
 
-builder.Services.AddScoped<IKeycloakEmailEventMapper, KeycloakEmailEventMapper>();
 builder.Services.AddScoped<IEmailDispatchService, EmailDispatchService>();
-builder.Services.AddSingleton<RazorEmailTemplateRenderer>();
-builder.Services.AddSingleton<IRazorEmailTemplateRenderer>(provider =>
-    provider.GetRequiredService<RazorEmailTemplateRenderer>());
-builder.Services.AddSingleton<IEmailTemplateRenderer>(provider =>
-    provider.GetRequiredService<RazorEmailTemplateRenderer>());
+builder.Services.AddSingleton<IEmailTemplateRenderer, RazorEmailTemplateRenderer>();
 
 builder.Services.Configure<BrevoEmailSenderOptions>(options =>
 {
@@ -59,26 +56,19 @@ builder.Services.Configure<BrevoEmailSenderOptions>(options =>
     options.BaseUrl = Env.GetRequired("BREVO_BASE_URL");
 });
 
-builder.Services.Configure<RabbitMqEmailConsumerOptions>(options =>
-{
-    options.Uri = Env.GetRequired("RABBITMQ_URI");
-    options.ExchangeNames = Env.GetRequiredList("RABBITMQ_EXCHANGES");
-    options.QueueName = Env.GetRequired("RABBITMQ_EMAIL_QUEUE");
-});
-
 builder.Services.AddHttpClient<BrevoEmailSender>();
-builder.Services.AddTransient<IBrevoEmailSender>(provider =>
-    provider.GetRequiredService<BrevoEmailSender>());
 builder.Services.AddTransient<IEmailSender>(provider =>
     provider.GetRequiredService<BrevoEmailSender>());
 
-builder.Services.AddSingleton<KeycloakEmailEventConsumer>();
-builder.Services.AddSingleton<IRabbitMqEmailConsumer>(provider =>
-    provider.GetRequiredService<KeycloakEmailEventConsumer>());
-builder.Services.AddSingleton<IKeycloakEmailEventConsumer>(provider =>
-    provider.GetRequiredService<KeycloakEmailEventConsumer>());
-builder.Services.AddHostedService(provider =>
-    provider.GetRequiredService<KeycloakEmailEventConsumer>());
+// RabbitMQ transport + email event consumer (alaasmagi.Base.Message.RabbitMQ).
+// Queue-only: the consumer reads a pre-provisioned queue; exchange/binding topology is owned by
+// the infrastructure, so this service references no exchange.
+var rabbitMqOptions = BuildRabbitMqOptions();
+builder.Services.AddRabbitMq(rabbitMqOptions);
+
+builder.Services.AddSingleton(new EmailQueueOptions { QueueName = Env.GetRequired("RABBITMQ_QUEUE") });
+builder.Services.AddSingleton<IBaseEventHandler<JsonElement>, EmailEventHandler>();
+builder.Services.AddRabbitMqConsumer<EmailEventConsumer>();
 
 var keycloakAuthority = Env.GetRequired("KEYCLOAK_AUTHORITY");
 var keycloakClientId = Env.GetRequired("KEYCLOAK_CLIENT_ID");
@@ -187,3 +177,26 @@ app.MapControllerRoute(
 
 
 app.Run();
+
+return;
+
+// Builds RabbitMQ connection options from the AMQP URI in the environment. Queue-only consumer:
+// no exchange is used. RabbitMqOptions.Exchange is a required member of the package type, so it is
+// set to empty and never referenced (removable once the package makes Exchange optional).
+static RabbitMqOptions BuildRabbitMqOptions()
+{
+    var amqpUri = new Uri(Env.GetRequired("RABBITMQ_URI"));
+    var userInfo = amqpUri.UserInfo.Split(':', 2);
+    var virtualHost = amqpUri.AbsolutePath.Trim('/');
+
+    return new RabbitMqOptions
+    {
+        Host = amqpUri.Host,
+        Port = amqpUri.IsDefaultPort ? 5672 : amqpUri.Port,
+        Username = Uri.UnescapeDataString(userInfo[0]),
+        Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty,
+        VirtualHost = string.IsNullOrEmpty(virtualHost) ? "/" : Uri.UnescapeDataString(virtualHost),
+        Exchange = string.Empty
+    };
+}
+

@@ -7,6 +7,6 @@ public interface IEmailTemplateRenderer
 {
     Task<RenderedEmailTemplate> RenderAsync(
         Template template,
-        EmailRenderModel model,
+        object model,
         CancellationToken cancellationToken = default);
 }

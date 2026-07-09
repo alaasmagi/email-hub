@@ -46,8 +46,7 @@ jobs:
           HOST_PORT: ${{ env.HOST_PORT }}
           DATABASE_CONNECTION_STRING: ${{ secrets.DATABASE_CONNECTION_STRING }}
           RABBITMQ_URI: ${{ secrets.RABBITMQ_URI }}
-          RABBITMQ_EXCHANGES: ${{ secrets.RABBITMQ_EXCHANGES }}
-          RABBITMQ_EMAIL_QUEUE: ${{ secrets.RABBITMQ_EMAIL_QUEUE }}
+          RABBITMQ_QUEUE: ${{ secrets.RABBITMQ_QUEUE }}
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
           BREVO_BASE_URL: ${{ secrets.BREVO_BASE_URL }}
           GLITCHTIP_DSN: ${{ secrets.GLITCHTIP_DSN }}
@@ -60,8 +59,7 @@ jobs:
 
           : "${DATABASE_CONNECTION_STRING:?DATABASE_CONNECTION_STRING is required}"
           : "${RABBITMQ_URI:?RABBITMQ_URI is required}"
-          : "${RABBITMQ_EXCHANGES:?RABBITMQ_EXCHANGES is required}"
-          : "${RABBITMQ_EMAIL_QUEUE:?RABBITMQ_EMAIL_QUEUE is required}"
+          : "${RABBITMQ_QUEUE:?RABBITMQ_QUEUE is required}"
           : "${BREVO_API_KEY:?BREVO_API_KEY is required}"
           : "${BREVO_BASE_URL:?BREVO_BASE_URL is required}"
           : "${GLITCHTIP_DSN:?GLITCHTIP_DSN is required}"
@@ -79,8 +77,7 @@ jobs:
             printf 'DATABASE_CONNECTION_STRING=%s\n' "${DATABASE_CONNECTION_STRING}"
 
             printf 'RABBITMQ_URI=%s\n' "${RABBITMQ_URI}"
-            printf 'RABBITMQ_EXCHANGES=%s\n' "${RABBITMQ_EXCHANGES}"
-            printf 'RABBITMQ_EMAIL_QUEUE=%s\n' "${RABBITMQ_EMAIL_QUEUE}"
+            printf 'RABBITMQ_QUEUE=%s\n' "${RABBITMQ_QUEUE}"
 
             printf 'BREVO_API_KEY=%s\n' "${BREVO_API_KEY}"
             printf 'BREVO_BASE_URL=%s\n' "${BREVO_BASE_URL}"

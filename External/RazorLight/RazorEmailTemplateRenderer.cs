@@ -7,7 +7,7 @@ using RazorLight;
 
 namespace External.RazorLight;
 
-public class RazorEmailTemplateRenderer : IRazorEmailTemplateRenderer
+public class RazorEmailTemplateRenderer : IEmailTemplateRenderer
 {
     private readonly RazorLightEngine _engine;
 
@@ -20,7 +20,7 @@ public class RazorEmailTemplateRenderer : IRazorEmailTemplateRenderer
 
     public async Task<RenderedEmailTemplate> RenderAsync(
         Template template,
-        EmailRenderModel model,
+        object model,
         CancellationToken cancellationToken = default)
     {
         var subject = await _engine.CompileRenderStringAsync(
