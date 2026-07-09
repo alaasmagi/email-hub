@@ -107,6 +107,11 @@ public class TemplateController : Controller
         try
         {
             var response = await _templateRepository.RemoveAsync(id, null, Guid.Empty);
+            if (response.Successful)
+            {
+                await _uow.SaveChangesAsync();
+            }
+
             TempData[response.Successful ? "SuccessMessage" : "ErrorMessage"] = response.Successful
                 ? "Template deleted."
                 : response.Error!.Message;

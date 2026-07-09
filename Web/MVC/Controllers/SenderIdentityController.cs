@@ -107,6 +107,11 @@ public class SenderIdentityController : Controller
         try
         {
             var response = await _senderIdentityRepository.RemoveAsync(id, null, Guid.Empty);
+            if (response.Successful)
+            {
+                await _uow.SaveChangesAsync();
+            }
+
             TempData[response.Successful ? "SuccessMessage" : "ErrorMessage"] = response.Successful
                 ? "Sender identity deleted."
                 : response.Error!.Message;

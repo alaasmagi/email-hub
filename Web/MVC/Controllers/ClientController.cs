@@ -95,6 +95,11 @@ public class ClientController : Controller
         try
         {
             var response = await _clientRepository.RemoveAsync(id, null, Guid.Empty);
+            if (response.Successful)
+            {
+                await _uow.SaveChangesAsync();
+            }
+
             TempData[response.Successful ? "SuccessMessage" : "ErrorMessage"] = response.Successful
                 ? "Client deleted."
                 : response.Error!.Message;
