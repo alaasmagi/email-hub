@@ -67,29 +67,4 @@
       <_ContentIncludedByDefault Remove="wwwroot\lib\jquery\LICENSE.txt" />
     </ItemGroup>
 
-    <ItemGroup>
-      <AdditionalFiles Include="MVC\Views\Account\AccessDenied.cshtml" />
-      <AdditionalFiles Include="MVC\Views\Client\Create.cshtml" />
-      <AdditionalFiles Include="MVC\Views\Client\Edit.cshtml" />
-      <AdditionalFiles Include="MVC\Views\Client\Index.cshtml" />
-      <AdditionalFiles Include="MVC\Views\Client\_Form.cshtml" />
-      <AdditionalFiles Include="MVC\Views\Email\Details.cshtml" />
-      <AdditionalFiles Include="MVC\Views\Email\Index.cshtml" />
-      <AdditionalFiles Include="MVC\Views\Home\Index.cshtml" />
-      <AdditionalFiles Include="MVC\Views\Home\Privacy.cshtml" />
-      <AdditionalFiles Include="MVC\Views\SenderIdentity\Create.cshtml" />
-      <AdditionalFiles Include="MVC\Views\SenderIdentity\Edit.cshtml" />
-      <AdditionalFiles Include="MVC\Views\SenderIdentity\Index.cshtml" />
-      <AdditionalFiles Include="MVC\Views\SenderIdentity\_Form.cshtml" />
-      <AdditionalFiles Include="MVC\Views\Shared\Error.cshtml" />
-      <AdditionalFiles Include="MVC\Views\Shared\_Layout.cshtml" />
-      <AdditionalFiles Include="MVC\Views\Shared\_ValidationScriptsPartial.cshtml" />
-      <AdditionalFiles Include="MVC\Views\Template\Create.cshtml" />
-      <AdditionalFiles Include="MVC\Views\Template\Edit.cshtml" />
-      <AdditionalFiles Include="MVC\Views\Template\Index.cshtml" />
-      <AdditionalFiles Include="MVC\Views\Template\_Form.cshtml" />
-      <AdditionalFiles Include="MVC\Views\_ViewImports.cshtml" />
-      <AdditionalFiles Include="MVC\Views\_ViewStart.cshtml" />
-    </ItemGroup>
-
 </Project>
