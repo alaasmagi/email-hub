@@ -66,6 +66,24 @@ public class EmailDispatchService : IEmailDispatchService
         var client = await _clientRepository.GetActiveByServiceNameAsync(request.ServiceName);
         if (client is null)
         {
+            var fallbackServiceName = GetFallbackServiceName(request.ServiceName);
+            if (fallbackServiceName is not null)
+            {
+                client = await _clientRepository.GetActiveByServiceNameAsync(fallbackServiceName);
+                if (client is not null)
+                {
+                    _logger.LogInformation(
+                        "Email dispatch is using fallback client. RequestedServiceName: {RequestedServiceName}, FallbackServiceName: {FallbackServiceName}, EmailType: {EmailType}, CorrelationId: {CorrelationId}",
+                        request.ServiceName,
+                        fallbackServiceName,
+                        request.EmailType,
+                        request.CorrelationId);
+                }
+            }
+        }
+
+        if (client is null)
+        {
             _logger.LogWarning(
                 "Email dispatch failed because active client was not found. ServiceName: {ServiceName}, CorrelationId: {CorrelationId}",
                 request.ServiceName,
@@ -74,6 +92,8 @@ public class EmailDispatchService : IEmailDispatchService
             return Failure($"Active client '{request.ServiceName}' was not found.");
         }
 
+        var resolvedServiceName = client.ServiceName;
+
         var senderIdentity = await _senderIdentityRepository.GetActiveAsync(
             client.Id,
             request.EmailType);
@@ -81,13 +101,14 @@ public class EmailDispatchService : IEmailDispatchService
         if (senderIdentity is null)
         {
             _logger.LogError(
-                "Email dispatch failed because active sender identity was not found. ServiceName: {ServiceName}, EmailType: {EmailType}, ClientId: {ClientId}, CorrelationId: {CorrelationId}",
+                "Email dispatch failed because active sender identity was not found. ServiceName: {ServiceName}, RequestedServiceName: {RequestedServiceName}, EmailType: {EmailType}, ClientId: {ClientId}, CorrelationId: {CorrelationId}",
+                resolvedServiceName,
                 request.ServiceName,
                 request.EmailType,
                 client.Id,
                 request.CorrelationId);
 
-            return Failure($"Active sender identity '{request.ServiceName}/{request.EmailType}' was not found.");
+            return Failure($"Active sender identity '{resolvedServiceName}/{request.EmailType}' was not found.");
         }
 
         var languageCode = NormalizeLanguageCode(request.LanguageCode);
@@ -99,14 +120,15 @@ public class EmailDispatchService : IEmailDispatchService
         if (template is null)
         {
             _logger.LogError(
-                "Email dispatch failed because active template was not found. ServiceName: {ServiceName}, EmailType: {EmailType}, SenderIdentityId: {SenderIdentityId}, LanguageCode: {LanguageCode}, CorrelationId: {CorrelationId}",
+                "Email dispatch failed because active template was not found. ServiceName: {ServiceName}, RequestedServiceName: {RequestedServiceName}, EmailType: {EmailType}, SenderIdentityId: {SenderIdentityId}, LanguageCode: {LanguageCode}, CorrelationId: {CorrelationId}",
+                resolvedServiceName,
                 request.ServiceName,
                 request.EmailType,
                 senderIdentity.Id,
                 languageCode,
                 request.CorrelationId);
 
-            return Failure($"Active template '{request.ServiceName}/{request.EmailType}/{languageCode}' was not found.");
+            return Failure($"Active template '{resolvedServiceName}/{request.EmailType}/{languageCode}' was not found.");
         }
 
         var rendered = await _templateRenderer.RenderAsync(
@@ -116,7 +138,7 @@ public class EmailDispatchService : IEmailDispatchService
 
         var email = new Email
         {
-            ServiceName = request.ServiceName,
+            ServiceName = resolvedServiceName,
             EmailType = request.EmailType,
             ToRecipients = request.ToEmail,
             ReplyTo = senderIdentity.ReplyTo,
@@ -128,7 +150,8 @@ public class EmailDispatchService : IEmailDispatchService
         if (!createEmailResponse.Successful || createEmailResponse.Value is null)
         {
             _logger.LogError(
-                "Email dispatch failed because email record could not be created. ServiceName: {ServiceName}, EmailType: {EmailType}, CorrelationId: {CorrelationId}, ErrorMessage: {ErrorMessage}",
+                "Email dispatch failed because email record could not be created. ServiceName: {ServiceName}, RequestedServiceName: {RequestedServiceName}, EmailType: {EmailType}, CorrelationId: {CorrelationId}, ErrorMessage: {ErrorMessage}",
+                resolvedServiceName,
                 request.ServiceName,
                 request.EmailType,
                 request.CorrelationId,
@@ -141,8 +164,9 @@ public class EmailDispatchService : IEmailDispatchService
         await _uow.SaveChangesAsync();
 
         _logger.LogInformation(
-            "Email record created. EmailId: {EmailId}, ServiceName: {ServiceName}, EmailType: {EmailType}, CorrelationId: {CorrelationId}",
+            "Email record created. EmailId: {EmailId}, ServiceName: {ServiceName}, RequestedServiceName: {RequestedServiceName}, EmailType: {EmailType}, CorrelationId: {CorrelationId}",
             email.Id,
+            resolvedServiceName,
             request.ServiceName,
             request.EmailType,
             request.CorrelationId);
@@ -233,6 +257,14 @@ public class EmailDispatchService : IEmailDispatchService
         return string.IsNullOrWhiteSpace(languageCode)
             ? "en"
             : languageCode.Trim().ToLowerInvariant();
+    }
+
+    private static string? GetFallbackServiceName(string serviceName)
+    {
+        return serviceName.StartsWith("identity.", StringComparison.OrdinalIgnoreCase) &&
+               !string.Equals(serviceName, "identity.base", StringComparison.OrdinalIgnoreCase)
+            ? "identity.base"
+            : null;
     }
 
     private static IMethodResponse<Guid> Success(Guid value)
