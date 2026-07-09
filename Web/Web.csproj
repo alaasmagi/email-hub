@@ -38,6 +38,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Content Include="MVC\wwwroot\**\*" CopyToPublishDirectory="PreserveNewest" />
       <_ContentIncludedByDefault Remove="Views\Account\AccessDenied.cshtml" />
       <_ContentIncludedByDefault Remove="Views\Clients\Create.cshtml" />
       <_ContentIncludedByDefault Remove="Views\Clients\Edit.cshtml" />

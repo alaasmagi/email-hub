@@ -84,6 +84,11 @@ public static class ServiceConfiguration
 
     private static IServiceCollection AddEmailQueue(this IServiceCollection services)
     {
+        services.Configure<HostOptions>(options =>
+        {
+            options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+        });
+
         services.AddRabbitMq(BuildRabbitMqOptions());
         services.AddSingleton(new EmailQueueOptions { QueueName = Env.GetRequired("RABBITMQ_QUEUE") });
         services.AddSingleton<IBaseEventHandler<JsonElement>, EmailEventHandler>();

@@ -19,20 +19,17 @@ if (!app.Environment.IsDevelopment())
 
 app.UseForwardedHeaders();
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets()
-    .AllowAnonymous();
-
 app.MapHealthChecks("/health").AllowAnonymous();
 
 app.MapControllerRoute(
         name: "default",
-        pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
+        pattern: "{controller=Home}/{action=Index}/{id?}");
 
 
 app.Run();
