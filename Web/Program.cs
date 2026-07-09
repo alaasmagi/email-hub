@@ -2,8 +2,7 @@ using Web.Configuration;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
-    Args = args,
-    WebRootPath = "MVC/wwwroot"
+    Args = args
 });
 
 Env.LoadFile(builder.Environment.ContentRootPath);

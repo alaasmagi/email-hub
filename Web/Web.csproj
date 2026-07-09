@@ -39,7 +39,6 @@
 
     <ItemGroup>
       <Content Update="MVC\Views\**\*.cshtml" CopyToPublishDirectory="PreserveNewest" />
-      <Content Update="MVC\wwwroot\**\*" CopyToPublishDirectory="PreserveNewest" />
       <_ContentIncludedByDefault Remove="Views\Account\AccessDenied.cshtml" />
       <_ContentIncludedByDefault Remove="Views\Clients\Create.cshtml" />
       <_ContentIncludedByDefault Remove="Views\Clients\Edit.cshtml" />
@@ -62,11 +61,6 @@
       <_ContentIncludedByDefault Remove="Views\Templates\_Form.cshtml" />
       <_ContentIncludedByDefault Remove="Views\_ViewImports.cshtml" />
       <_ContentIncludedByDefault Remove="Views\_ViewStart.cshtml" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\site.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\favicon.ico" />
-      <_ContentIncludedByDefault Remove="wwwroot\js\site.js" />
-      <_ContentIncludedByDefault Remove="wwwroot\lib\jquery-validation-unobtrusive\LICENSE.txt" />
-      <_ContentIncludedByDefault Remove="wwwroot\lib\jquery\LICENSE.txt" />
     </ItemGroup>
 
 </Project>
