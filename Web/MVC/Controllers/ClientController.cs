@@ -3,16 +3,17 @@ using Contracts.DataAccess;
 using Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Web.MVC.Controllers;
 
 [Authorize]
-public class ClientsController : Controller
+public class ClientController : Controller
 {
     private readonly IClientRepository _clientRepository;
     private readonly IBaseUow _uow;
 
-    public ClientsController(IClientRepository clientRepository, IBaseUow uow)
+    public ClientController(IClientRepository clientRepository, IBaseUow uow)
     {
         _clientRepository = clientRepository;
         _uow = uow;
@@ -83,6 +84,25 @@ public class ClientsController : Controller
         }
 
         await _uow.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        try
+        {
+            var response = await _clientRepository.RemoveAsync(id, null, Guid.Empty);
+            TempData[response.Successful ? "SuccessMessage" : "ErrorMessage"] = response.Successful
+                ? "Client deleted."
+                : response.Error!.Message;
+        }
+        catch (DbUpdateException)
+        {
+            TempData["ErrorMessage"] = "Client cannot be deleted while sender identities reference it.";
+        }
 
         return RedirectToAction(nameof(Index));
     }

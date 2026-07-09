@@ -4,17 +4,18 @@ using Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace Web.MVC.Controllers;
 
 [Authorize]
-public class TemplatesController : Controller
+public class TemplateController : Controller
 {
     private readonly ISenderIdentityRepository _senderIdentityRepository;
     private readonly ITemplateRepository _templateRepository;
     private readonly IBaseUow _uow;
 
-    public TemplatesController(
+    public TemplateController(
         ISenderIdentityRepository senderIdentityRepository,
         ITemplateRepository templateRepository,
         IBaseUow uow)
@@ -95,6 +96,25 @@ public class TemplatesController : Controller
         }
 
         await _uow.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        try
+        {
+            var response = await _templateRepository.RemoveAsync(id, null, Guid.Empty);
+            TempData[response.Successful ? "SuccessMessage" : "ErrorMessage"] = response.Successful
+                ? "Template deleted."
+                : response.Error!.Message;
+        }
+        catch (DbUpdateException)
+        {
+            TempData["ErrorMessage"] = "Template could not be deleted.";
+        }
 
         return RedirectToAction(nameof(Index));
     }

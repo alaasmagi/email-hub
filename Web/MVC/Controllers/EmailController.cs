@@ -5,11 +5,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace Web.MVC.Controllers;
 
 [Authorize]
-public class EmailsController : Controller
+public class EmailController : Controller
 {
     private readonly IEmailRepository _emailRepository;
 
-    public EmailsController(IEmailRepository emailRepository)
+    public EmailController(IEmailRepository emailRepository)
     {
         _emailRepository = emailRepository;
     }

@@ -4,17 +4,18 @@ using Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace Web.MVC.Controllers;
 
 [Authorize]
-public class SenderIdentitiesController : Controller
+public class SenderIdentityController : Controller
 {
     private readonly IClientRepository _clientRepository;
     private readonly ISenderIdentityRepository _senderIdentityRepository;
     private readonly IBaseUow _uow;
 
-    public SenderIdentitiesController(
+    public SenderIdentityController(
         IClientRepository clientRepository,
         ISenderIdentityRepository senderIdentityRepository,
         IBaseUow uow)
@@ -95,6 +96,25 @@ public class SenderIdentitiesController : Controller
         }
 
         await _uow.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        try
+        {
+            var response = await _senderIdentityRepository.RemoveAsync(id, null, Guid.Empty);
+            TempData[response.Successful ? "SuccessMessage" : "ErrorMessage"] = response.Successful
+                ? "Sender identity deleted."
+                : response.Error!.Message;
+        }
+        catch (DbUpdateException)
+        {
+            TempData["ErrorMessage"] = "Sender identity cannot be deleted while templates reference it.";
+        }
 
         return RedirectToAction(nameof(Index));
     }

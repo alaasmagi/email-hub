@@ -38,16 +38,16 @@
                     @if (User.Identity?.IsAuthenticated == true)
                     {
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Clients" asp-action="Index">Clients</a>
+                            <a class="nav-link" asp-area="" asp-controller="Client" asp-action="Index">Clients</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="SenderIdentities" asp-action="Index">Senders</a>
+                            <a class="nav-link" asp-area="" asp-controller="SenderIdentity" asp-action="Index">Senders</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Templates" asp-action="Index">Templates</a>
+                            <a class="nav-link" asp-area="" asp-controller="Template" asp-action="Index">Templates</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Emails" asp-action="Index">Emails</a>
+                            <a class="nav-link" asp-area="" asp-controller="Email" asp-action="Index">Emails</a>
                         </li>
                     }
                 </ul>

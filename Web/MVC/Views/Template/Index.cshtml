@@ -13,6 +13,16 @@
     <a class="btn btn-primary" asp-action="Create">Create</a>
 </div>
 
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
 <div class="table-card">
 <table class="table table-hover align-middle">
     <thead>
@@ -36,6 +46,10 @@
             </td>
             <td class="text-end">
                 <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@template.Id">Edit</a>
+                <form asp-action="Delete" asp-route-id="@template.Id" method="post" class="d-inline"
+                      onsubmit="return confirm('Delete this template?');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                </form>
             </td>
         </tr>
     }

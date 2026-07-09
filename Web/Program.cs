@@ -19,11 +19,16 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Web.Configuration;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    WebRootPath = "MVC/wwwroot"
+});
 
 Env.LoadFile(builder.Environment.ContentRootPath);
 builder.ConfigureApplicationLogging();
@@ -132,6 +137,13 @@ builder.Services.AddAuthorization(options =>
         .Build();
 });
 
+builder.Services.Configure<RazorViewEngineOptions>(options =>
+{
+    options.ViewLocationFormats.Clear();
+    options.ViewLocationFormats.Add("/MVC/Views/{1}/{0}.cshtml");
+    options.ViewLocationFormats.Add("/MVC/Views/Shared/{0}.cshtml");
+});
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
@@ -199,4 +211,3 @@ static RabbitMqOptions BuildRabbitMqOptions()
         Exchange = string.Empty
     };
 }
-

@@ -15,8 +15,8 @@
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     <div class="d-flex flex-wrap gap-2">
-                        <a class="btn btn-primary btn-lg" asp-controller="Clients" asp-action="Index">Open admin</a>
-                        <a class="btn btn-outline-secondary btn-lg" asp-controller="Emails" asp-action="Index">View deliveries</a>
+                        <a class="btn btn-primary btn-lg" asp-controller="Client" asp-action="Index">Open admin</a>
+                        <a class="btn btn-outline-secondary btn-lg" asp-controller="Email" asp-action="Index">View deliveries</a>
                     </div>
                 }
                 else
@@ -34,25 +34,25 @@
         <div class="container">
             <div class="row g-3">
                 <div class="col-md-3">
-                    <a class="action-card" asp-controller="Clients" asp-action="Index">
+                    <a class="action-card" asp-controller="Client" asp-action="Index">
                         <span>Clients</span>
                         <strong>Manage service mappings</strong>
                     </a>
                 </div>
                 <div class="col-md-3">
-                    <a class="action-card" asp-controller="SenderIdentities" asp-action="Index">
+                    <a class="action-card" asp-controller="SenderIdentity" asp-action="Index">
                         <span>Senders</span>
                         <strong>Control sender identities</strong>
                     </a>
                 </div>
                 <div class="col-md-3">
-                    <a class="action-card" asp-controller="Templates" asp-action="Index">
+                    <a class="action-card" asp-controller="Template" asp-action="Index">
                         <span>Templates</span>
                         <strong>Edit database cshtml</strong>
                     </a>
                 </div>
                 <div class="col-md-3">
-                    <a class="action-card" asp-controller="Emails" asp-action="Index">
+                    <a class="action-card" asp-controller="Email" asp-action="Index">
                         <span>Emails</span>
                         <strong>Review delivery status</strong>
                     </a>
