@@ -1,9 +1,25 @@
 @model SenderIdentity
+@{
+    var clients = (IReadOnlyList<ClientOption>)(ViewBag.Clients ?? new List<ClientOption>());
+    var selectedClient = clients.FirstOrDefault(x => x.Id == Model.ClientId) ?? clients.FirstOrDefault();
+}
 
 <div>
     <label class="form-label" asp-for="ClientId"></label>
-    <select class="form-select" asp-for="ClientId" asp-items="ViewBag.Clients"></select>
+    <select class="form-select" id="ClientId" name="ClientId">
+        @foreach (var client in clients)
+        {
+            <option value="@client.Id" data-service-name="@client.ServiceName" selected="@(client.Id == selectedClient?.Id)">
+                @client.ServiceName - @client.DisplayName
+            </option>
+        }
+    </select>
     <span class="text-danger" asp-validation-for="ClientId"></span>
+</div>
+
+<div>
+    <label class="form-label" for="ClientServiceName">Client service name</label>
+    <input class="form-control font-monospace" id="ClientServiceName" value="@selectedClient?.ServiceName" readonly/>
 </div>
 
 <div>
@@ -34,3 +50,20 @@
     <input class="form-check-input" asp-for="IsActive"/>
     <label class="form-check-label" asp-for="IsActive"></label>
 </div>
+
+<script>
+    (() => {
+        const clientSelect = document.getElementById("ClientId");
+        const serviceNameInput = document.getElementById("ClientServiceName");
+        if (!clientSelect || !serviceNameInput) {
+            return;
+        }
+
+        const syncServiceName = () => {
+            serviceNameInput.value = clientSelect.selectedOptions[0]?.dataset.serviceName || "";
+        };
+
+        clientSelect.addEventListener("change", syncServiceName);
+        syncServiceName();
+    })();
+</script>

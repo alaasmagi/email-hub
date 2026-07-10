@@ -1,4 +1,4 @@
-@model IEnumerable<Template>
+@model IEnumerable<TemplateIndexRow>
 
 @{
     ViewData["Title"] = "Templates";
@@ -27,6 +27,7 @@
 <table class="table table-hover align-middle">
     <thead>
     <tr>
+        <th>Client service</th>
         <th>Sender identity</th>
         <th>Language</th>
         <th>Subject</th>
@@ -38,15 +39,19 @@
     @foreach (var template in Model)
     {
         <tr>
-            <td><code>@template.SenderIdentityId</code></td>
-            <td>@template.LanguageCode</td>
-            <td>@template.SubjectTemplate</td>
+            <td><code>@template.ClientServiceName</code></td>
             <td>
-                <span class="status-badge @(template.IsActive ? "is-active" : "")">@(template.IsActive ? "Active" : "Inactive")</span>
+                <div>@template.SenderEmailType</div>
+                <code>@template.SenderFromAddress</code>
+            </td>
+            <td>@template.Template.LanguageCode</td>
+            <td>@template.Template.SubjectTemplate</td>
+            <td>
+                <span class="status-badge @(template.Template.IsActive ? "is-active" : "")">@(template.Template.IsActive ? "Active" : "Inactive")</span>
             </td>
             <td class="text-end">
-                <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@template.Id">Edit</a>
-                <form asp-action="Delete" asp-route-id="@template.Id" method="post" class="d-inline"
+                <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@template.Template.Id">Edit</a>
+                <form asp-action="Delete" asp-route-id="@template.Template.Id" method="post" class="d-inline"
                       onsubmit="return confirm('Delete this template?');">
                     <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                 </form>

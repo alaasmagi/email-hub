@@ -3,8 +3,8 @@ using Contracts.DataAccess;
 using Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Web.MVC.Models;
 
 namespace Web.MVC.Controllers;
 
@@ -28,7 +28,18 @@ public class SenderIdentityController : Controller
     public async Task<IActionResult> Index()
     {
         var senderIdentities = await _senderIdentityRepository.GetAllForAdminAsync();
-        return View(senderIdentities);
+        var clients = (await _clientRepository.GetAllForAdminAsync())
+            .ToDictionary(x => x.Id, x => x.ServiceName);
+
+        var rows = senderIdentities
+            .Select(senderIdentity => new SenderIdentityIndexRow
+            {
+                SenderIdentity = senderIdentity,
+                ClientServiceName = clients.GetValueOrDefault(senderIdentity.ClientId, "Unknown")
+            })
+            .ToList();
+
+        return View(rows);
     }
 
     public async Task<IActionResult> Create()
@@ -128,10 +139,11 @@ public class SenderIdentityController : Controller
     {
         var clients = (await _clientRepository.GetAllForAdminAsync())
             .OrderBy(x => x.ServiceName)
-            .Select(x => new SelectListItem
+            .Select(x => new ClientOption
             {
-                Value = x.Id.ToString(),
-                Text = $"{x.ServiceName} - {x.DisplayName}"
+                Id = x.Id,
+                ServiceName = x.ServiceName,
+                DisplayName = x.DisplayName
             })
             .ToList();
 

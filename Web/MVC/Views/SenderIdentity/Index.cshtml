@@ -1,4 +1,4 @@
-@model IEnumerable<SenderIdentity>
+@model IEnumerable<SenderIdentityIndexRow>
 
 @{
     ViewData["Title"] = "Sender identities";
@@ -27,6 +27,7 @@
 <table class="table table-hover align-middle">
     <thead>
     <tr>
+        <th>Client service</th>
         <th>Email type</th>
         <th>From</th>
         <th>Display name</th>
@@ -39,16 +40,17 @@
     @foreach (var sender in Model)
     {
         <tr>
-            <td>@sender.EmailType</td>
-            <td>@sender.FromAddress</td>
-            <td>@sender.DisplayName</td>
-            <td>@sender.ReplyTo</td>
+            <td><code>@sender.ClientServiceName</code></td>
+            <td>@sender.SenderIdentity.EmailType</td>
+            <td>@sender.SenderIdentity.FromAddress</td>
+            <td>@sender.SenderIdentity.DisplayName</td>
+            <td>@sender.SenderIdentity.ReplyTo</td>
             <td>
-                <span class="status-badge @(sender.IsActive ? "is-active" : "")">@(sender.IsActive ? "Active" : "Inactive")</span>
+                <span class="status-badge @(sender.SenderIdentity.IsActive ? "is-active" : "")">@(sender.SenderIdentity.IsActive ? "Active" : "Inactive")</span>
             </td>
             <td class="text-end">
-                <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@sender.Id">Edit</a>
-                <form asp-action="Delete" asp-route-id="@sender.Id" method="post" class="d-inline"
+                <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@sender.SenderIdentity.Id">Edit</a>
+                <form asp-action="Delete" asp-route-id="@sender.SenderIdentity.Id" method="post" class="d-inline"
                       onsubmit="return confirm('Delete this sender identity? Templates must be deleted first.');">
                     <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                 </form>

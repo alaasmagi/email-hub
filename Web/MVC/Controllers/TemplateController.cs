@@ -3,23 +3,26 @@ using Contracts.DataAccess;
 using Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Web.MVC.Models;
 
 namespace Web.MVC.Controllers;
 
 [Authorize]
 public class TemplateController : Controller
 {
+    private readonly IClientRepository _clientRepository;
     private readonly ISenderIdentityRepository _senderIdentityRepository;
     private readonly ITemplateRepository _templateRepository;
     private readonly IBaseUow _uow;
 
     public TemplateController(
+        IClientRepository clientRepository,
         ISenderIdentityRepository senderIdentityRepository,
         ITemplateRepository templateRepository,
         IBaseUow uow)
     {
+        _clientRepository = clientRepository;
         _senderIdentityRepository = senderIdentityRepository;
         _templateRepository = templateRepository;
         _uow = uow;
@@ -28,7 +31,30 @@ public class TemplateController : Controller
     public async Task<IActionResult> Index()
     {
         var templates = await _templateRepository.GetAllForAdminAsync();
-        return View(templates);
+        var senderIdentities = await _senderIdentityRepository.GetAllForAdminAsync();
+        var clients = (await _clientRepository.GetAllForAdminAsync())
+            .ToDictionary(x => x.Id, x => x.ServiceName);
+        var senders = senderIdentities.ToDictionary(x => x.Id);
+
+        var rows = templates
+            .Select(template =>
+            {
+                senders.TryGetValue(template.SenderIdentityId, out var senderIdentity);
+                var clientServiceName = senderIdentity is null
+                    ? "Unknown"
+                    : clients.GetValueOrDefault(senderIdentity.ClientId, "Unknown");
+
+                return new TemplateIndexRow
+                {
+                    Template = template,
+                    ClientServiceName = clientServiceName,
+                    SenderEmailType = senderIdentity?.EmailType ?? "Unknown",
+                    SenderFromAddress = senderIdentity?.FromAddress ?? "Unknown"
+                };
+            })
+            .ToList();
+
+        return View(rows);
     }
 
     public async Task<IActionResult> Create()
@@ -126,13 +152,18 @@ public class TemplateController : Controller
 
     private async Task LoadSenderIdentitiesAsync()
     {
+        var clients = (await _clientRepository.GetAllForAdminAsync())
+            .ToDictionary(x => x.Id, x => x.ServiceName);
+
         var senderIdentities = (await _senderIdentityRepository.GetAllForAdminAsync())
             .OrderBy(x => x.EmailType)
             .ThenBy(x => x.FromAddress)
-            .Select(x => new SelectListItem
+            .Select(x => new SenderIdentityOption
             {
-                Value = x.Id.ToString(),
-                Text = $"{x.EmailType} - {x.FromAddress}"
+                Id = x.Id,
+                ClientServiceName = clients.GetValueOrDefault(x.ClientId, "Unknown"),
+                EmailType = x.EmailType,
+                FromAddress = x.FromAddress
             })
             .ToList();
 
