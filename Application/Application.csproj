@@ -7,9 +7,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="alaasmagi.Base.DTO" Version="1.1.7" />
-      <PackageReference Include="alaasmagi.Base.Contracts.Message" Version="1.1.7" />
-      <PackageReference Include="alaasmagi.Base.Keycloak" Version="1.1.7" />
+      <PackageReference Include="alaasmagi.Base.DTO" Version="1.1.9" />
+      <PackageReference Include="alaasmagi.Base.Contracts.Message" Version="1.1.9" />
+      <PackageReference Include="alaasmagi.Base.Keycloak" Version="1.1.9" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.9" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.9" />
     </ItemGroup>

@@ -196,15 +196,19 @@ public static class ServiceConfiguration
         var amqpUri = new Uri(Env.GetRequired("RABBITMQ_URI"));
         var userInfo = amqpUri.UserInfo.Split(':', 2);
         var virtualHost = amqpUri.AbsolutePath.Trim('/');
+        var useTls = amqpUri.Scheme.Equals("amqps", StringComparison.OrdinalIgnoreCase);
+        var defaultPort = useTls ? 5671 : 5672;
 
         return new RabbitMqOptions
         {
             Host = amqpUri.Host,
-            Port = amqpUri.IsDefaultPort ? 5672 : amqpUri.Port,
+            Port = amqpUri.IsDefaultPort ? defaultPort : amqpUri.Port,
             Username = Uri.UnescapeDataString(userInfo[0]),
             Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty,
             VirtualHost = string.IsNullOrEmpty(virtualHost) ? "/" : Uri.UnescapeDataString(virtualHost),
-            Exchange = string.Empty
+            Exchange = string.Empty,
+            UseTls = useTls,
+            AcceptInvalidTlsCertificate = !string.IsNullOrEmpty(Env.Get("RABBITMQ_ACCEPT_INVALID_CERT"))
         };
     }
 }

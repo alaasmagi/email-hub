@@ -11,8 +11,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="alaasmagi.Base.Message.RabbitMQ" Version="1.1.7" />
-      <PackageReference Include="alaasmagi.Base.Keycloak" Version="1.1.7" />
+      <PackageReference Include="alaasmagi.Base.Message.RabbitMQ" Version="1.1.9" />
+      <PackageReference Include="alaasmagi.Base.Keycloak" Version="1.1.9" />
       <PackageReference Include="RazorLight" Version="2.3.1" />
     </ItemGroup>
 
