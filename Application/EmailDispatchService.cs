@@ -100,6 +100,36 @@ public class EmailDispatchService : IEmailDispatchService
 
         if (senderIdentity is null)
         {
+            var fallbackServiceName = GetFallbackServiceName(request.ServiceName);
+            if (fallbackServiceName is not null &&
+                !string.Equals(resolvedServiceName, fallbackServiceName, StringComparison.OrdinalIgnoreCase))
+            {
+                var fallbackClient = await _clientRepository.GetActiveByServiceNameAsync(fallbackServiceName);
+                if (fallbackClient is not null)
+                {
+                    var fallbackSenderIdentity = await _senderIdentityRepository.GetActiveAsync(
+                        fallbackClient.Id,
+                        request.EmailType);
+
+                    if (fallbackSenderIdentity is not null)
+                    {
+                        client = fallbackClient;
+                        resolvedServiceName = fallbackClient.ServiceName;
+                        senderIdentity = fallbackSenderIdentity;
+
+                        _logger.LogInformation(
+                            "Email dispatch is using fallback sender identity. RequestedServiceName: {RequestedServiceName}, FallbackServiceName: {FallbackServiceName}, EmailType: {EmailType}, CorrelationId: {CorrelationId}",
+                            request.ServiceName,
+                            fallbackServiceName,
+                            request.EmailType,
+                            request.CorrelationId);
+                    }
+                }
+            }
+        }
+
+        if (senderIdentity is null)
+        {
             _logger.LogError(
                 "Email dispatch failed because active sender identity was not found. ServiceName: {ServiceName}, RequestedServiceName: {RequestedServiceName}, EmailType: {EmailType}, ClientId: {ClientId}, CorrelationId: {CorrelationId}",
                 resolvedServiceName,
