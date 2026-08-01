@@ -20,7 +20,7 @@ public class RazorEmailTemplateRenderer : IEmailTemplateRenderer
 
     public async Task<RenderedEmailTemplate> RenderAsync(
         Template template,
-        object model,
+        EmailTemplateModel model,
         CancellationToken cancellationToken = default)
     {
         var subject = await _engine.CompileRenderStringAsync(

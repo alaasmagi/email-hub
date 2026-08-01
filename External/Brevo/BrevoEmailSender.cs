@@ -29,6 +29,7 @@ public class BrevoEmailSender : IEmailSender
     {
         if (string.IsNullOrWhiteSpace(_options.ApiKey))
         {
+            // Misconfiguration, not a transient outage — requeueing would just spin.
             _logger.LogError("Brevo email send failed because BREVO_API_KEY is not configured.");
             return EmailSendResult.Failure("Brevo API key is not configured.");
         }
@@ -52,13 +53,20 @@ public class BrevoEmailSender : IEmailSender
 
             if (!response.IsSuccessStatusCode)
             {
+                var statusCode = (int)response.StatusCode;
+                var transient = IsTransientStatus(statusCode);
+
                 _logger.LogError(
-                    "Brevo email send failed. StatusCode: {StatusCode}, CorrelationId: {CorrelationId}",
-                    (int)response.StatusCode,
+                    "Brevo email send failed. StatusCode: {StatusCode}, Transient: {Transient}, CorrelationId: {CorrelationId}",
+                    statusCode,
+                    transient,
                     message.CorrelationId);
 
+                // Note: responseBody is kept out of the returned error/log — a Brevo error can echo
+                // request fields, and this result flows into exception paths and GlitchTip.
                 return EmailSendResult.Failure(
-                    $"Brevo returned {(int)response.StatusCode}: {responseBody}");
+                    $"Brevo returned {statusCode}.",
+                    transient);
             }
 
             var sendResponse = await response.Content.ReadFromJsonAsync<BrevoSendResponse>(
@@ -73,22 +81,31 @@ public class BrevoEmailSender : IEmailSender
         }
         catch (HttpRequestException exception)
         {
+            // Network-level failure — transient, worth a requeue.
             _logger.LogError(
                 exception,
                 "Brevo email send failed because the HTTP request failed. CorrelationId: {CorrelationId}",
                 message.CorrelationId);
 
-            return EmailSendResult.Failure(exception.Message);
+            return EmailSendResult.Failure(exception.Message, transient: true);
         }
         catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested)
         {
+            // Timeout — transient.
             _logger.LogError(
                 exception,
                 "Brevo email send timed out. CorrelationId: {CorrelationId}",
                 message.CorrelationId);
 
-            return EmailSendResult.Failure(exception.Message);
+            return EmailSendResult.Failure(exception.Message, transient: true);
         }
+    }
+
+    // 5xx = Brevo-side outage; 408 request timeout; 429 rate limit → all transient (retry may work).
+    // Every other 4xx (bad request, invalid recipient, auth) is permanent.
+    private static bool IsTransientStatus(int statusCode)
+    {
+        return statusCode >= 500 || statusCode == 408 || statusCode == 429;
     }
 
     private Uri BuildUri(string path)

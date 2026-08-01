@@ -43,7 +43,7 @@ public class AppDbContext : DbContext
     private static void ConfigureSenderIdentities(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<SenderIdentityEntity>()
-            .HasIndex(x => new { x.ClientId, x.EmailType })
+            .HasIndex(x => new { x.ClientId, x.EmailType, x.Tenant })
             .IsUnique();
 
         modelBuilder.Entity<SenderIdentityEntity>()
@@ -92,11 +92,21 @@ public class AppDbContext : DbContext
 
     private static void ConfigureEmails(ModelBuilder modelBuilder)
     {
+        // The idempotency guard: the envelope id is unique, so a duplicate delivery cannot create a
+        // second row (and a second email). Inserting this row before sending is the dedup itself.
+        modelBuilder.Entity<EmailEntity>()
+            .HasIndex(x => x.MessageId)
+            .IsUnique();
+
         modelBuilder.Entity<EmailEntity>()
             .HasIndex(x => new { x.ServiceName, x.EmailType });
 
         modelBuilder.Entity<EmailEntity>()
             .HasIndex(x => x.Status);
+
+        modelBuilder.Entity<EmailEntity>()
+            .Property(x => x.MessageId)
+            .IsRequired();
 
         modelBuilder.Entity<EmailEntity>()
             .Property(x => x.ServiceName)

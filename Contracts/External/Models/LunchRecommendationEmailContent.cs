@@ -34,8 +34,12 @@ public class RecommendationRowContent
     [JsonPropertyName("offers")]
     public List<OfferContent> Offers { get; set; } = [];
 
-    [JsonPropertyName("offerTimes")]
-    public string OfferTimes { get; set; } = default!;
+    // Wall-clock hours printed on the restaurant's door — no timezone, never converted to UTC.
+    [JsonPropertyName("offerTimeFrom")]
+    public string OfferTimeFrom { get; set; } = default!;
+
+    [JsonPropertyName("offerTimeUntil")]
+    public string OfferTimeUntil { get; set; } = default!;
 
     [JsonPropertyName("link")]
     public string Link { get; set; } = default!;

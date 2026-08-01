@@ -1,6 +1,3 @@
-using Base.Contracts.DataAccess;
-using Base.Contracts.DTO;
-using Base.DTO;
 using Contracts.Application;
 using Contracts.DataAccess;
 using Contracts.External;
@@ -10,23 +7,28 @@ using Microsoft.Extensions.Logging;
 
 namespace Application;
 
+/// <summary>
+/// Renders and sends one templated email, idempotently. Resolves the three independent inputs the
+/// contract insists on not collapsing: the template by <c>{source}.{action}</c>, the branding by
+/// <c>tenant</c>, and the language by <c>locale</c>.
+/// </summary>
 public class EmailDispatchService : IEmailDispatchService
 {
     private readonly IClientRepository _clientRepository;
     private readonly ISenderIdentityRepository _senderIdentityRepository;
     private readonly ITemplateRepository _templateRepository;
     private readonly IEmailRepository _emailRepository;
-    private readonly IBaseUow _uow;
     private readonly IEmailTemplateRenderer _templateRenderer;
     private readonly IEmailSender _emailSender;
     private readonly ILogger<EmailDispatchService> _logger;
+
+    private const string DefaultLanguageCode = "en";
 
     public EmailDispatchService(
         IClientRepository clientRepository,
         ISenderIdentityRepository senderIdentityRepository,
         ITemplateRepository templateRepository,
         IEmailRepository emailRepository,
-        IBaseUow uow,
         IEmailTemplateRenderer templateRenderer,
         IEmailSender emailSender,
         ILogger<EmailDispatchService> logger)
@@ -35,178 +37,125 @@ public class EmailDispatchService : IEmailDispatchService
         _senderIdentityRepository = senderIdentityRepository;
         _templateRepository = templateRepository;
         _emailRepository = emailRepository;
-        _uow = uow;
         _templateRenderer = templateRenderer;
         _emailSender = emailSender;
         _logger = logger;
     }
 
-    public async Task<IMethodResponse<Guid>> SendTemplatedEmailAsync(
+    public async Task<EmailDispatchResult> SendTemplatedEmailAsync(
         SendTemplatedEmailRequest request,
         CancellationToken cancellationToken = default)
     {
-        var validationError = Validate(request);
-        if (validationError is not null)
-        {
-            _logger.LogWarning(
-                "Email dispatch request rejected: {ValidationError}. CorrelationId: {CorrelationId}",
-                validationError,
-                request.CorrelationId);
-
-            return Failure(validationError);
-        }
-
-        _logger.LogInformation(
-            "Email dispatch started. ServiceName: {ServiceName}, EmailType: {EmailType}, LanguageCode: {LanguageCode}, CorrelationId: {CorrelationId}",
-            request.ServiceName,
-            request.EmailType,
-            request.LanguageCode,
-            request.CorrelationId);
-
-        var client = await _clientRepository.GetActiveByServiceNameAsync(request.ServiceName);
-        if (client is null)
-        {
-            var fallbackServiceName = GetFallbackServiceName(request.ServiceName);
-            if (fallbackServiceName is not null)
-            {
-                client = await _clientRepository.GetActiveByServiceNameAsync(fallbackServiceName);
-                if (client is not null)
-                {
-                    _logger.LogInformation(
-                        "Email dispatch is using fallback client. RequestedServiceName: {RequestedServiceName}, FallbackServiceName: {FallbackServiceName}, EmailType: {EmailType}, CorrelationId: {CorrelationId}",
-                        request.ServiceName,
-                        fallbackServiceName,
-                        request.EmailType,
-                        request.CorrelationId);
-                }
-            }
-        }
-
-        if (client is null)
-        {
-            _logger.LogWarning(
-                "Email dispatch failed because active client was not found. ServiceName: {ServiceName}, CorrelationId: {CorrelationId}",
-                request.ServiceName,
-                request.CorrelationId);
-
-            return Failure($"Active client '{request.ServiceName}' was not found.");
-        }
-
-        var resolvedServiceName = client.ServiceName;
-
-        var senderIdentity = await _senderIdentityRepository.GetActiveAsync(
-            client.Id,
-            request.EmailType);
-
-        if (senderIdentity is null)
-        {
-            var fallbackServiceName = GetFallbackServiceName(request.ServiceName);
-            if (fallbackServiceName is not null &&
-                !string.Equals(resolvedServiceName, fallbackServiceName, StringComparison.OrdinalIgnoreCase))
-            {
-                var fallbackClient = await _clientRepository.GetActiveByServiceNameAsync(fallbackServiceName);
-                if (fallbackClient is not null)
-                {
-                    var fallbackSenderIdentity = await _senderIdentityRepository.GetActiveAsync(
-                        fallbackClient.Id,
-                        request.EmailType);
-
-                    if (fallbackSenderIdentity is not null)
-                    {
-                        client = fallbackClient;
-                        resolvedServiceName = fallbackClient.ServiceName;
-                        senderIdentity = fallbackSenderIdentity;
-
-                        _logger.LogInformation(
-                            "Email dispatch is using fallback sender identity. RequestedServiceName: {RequestedServiceName}, FallbackServiceName: {FallbackServiceName}, EmailType: {EmailType}, CorrelationId: {CorrelationId}",
-                            request.ServiceName,
-                            fallbackServiceName,
-                            request.EmailType,
-                            request.CorrelationId);
-                    }
-                }
-            }
-        }
-
-        if (senderIdentity is null)
-        {
-            _logger.LogError(
-                "Email dispatch failed because active sender identity was not found. ServiceName: {ServiceName}, RequestedServiceName: {RequestedServiceName}, EmailType: {EmailType}, ClientId: {ClientId}, CorrelationId: {CorrelationId}",
-                resolvedServiceName,
-                request.ServiceName,
-                request.EmailType,
-                client.Id,
-                request.CorrelationId);
-
-            return Failure($"Active sender identity '{resolvedServiceName}/{request.EmailType}' was not found.");
-        }
-
         var languageCode = NormalizeLanguageCode(request.LanguageCode);
 
-        var template =
-            await _templateRepository.GetActiveAsync(senderIdentity.Id, languageCode)
-            ?? await _templateRepository.GetActiveAsync(senderIdentity.Id, "en");
+        // --- Resolve the three axes. A miss on any is permanent: retrying can't conjure a template. ---
+        var client = await _clientRepository.GetActiveByServiceNameAsync(request.Source);
+        if (client is null)
+        {
+            return Permanent(request, $"No active client for source '{request.Source}'.");
+        }
 
+        var branding = await _senderIdentityRepository.GetActiveAsync(
+            client.Id, request.EmailType, request.Tenant);
+        if (branding is null)
+        {
+            return Permanent(request,
+                $"No active sender identity for '{request.Source}/{request.EmailType}' (tenant '{request.Tenant}').");
+        }
+
+        var template =
+            await _templateRepository.GetActiveAsync(branding.Id, languageCode)
+            ?? await _templateRepository.GetActiveAsync(branding.Id, DefaultLanguageCode);
         if (template is null)
         {
-            _logger.LogError(
-                "Email dispatch failed because active template was not found. ServiceName: {ServiceName}, RequestedServiceName: {RequestedServiceName}, EmailType: {EmailType}, SenderIdentityId: {SenderIdentityId}, LanguageCode: {LanguageCode}, CorrelationId: {CorrelationId}",
-                resolvedServiceName,
-                request.ServiceName,
-                request.EmailType,
-                senderIdentity.Id,
-                languageCode,
-                request.CorrelationId);
-
-            return Failure($"Active template '{resolvedServiceName}/{request.EmailType}/{languageCode}' was not found.");
+            return Permanent(request,
+                $"No active template for '{request.Source}/{request.EmailType}' language '{languageCode}'.");
         }
 
-        var rendered = await _templateRenderer.RenderAsync(
-            template,
-            request.Content,
-            cancellationToken);
-
-        var email = new Email
+        // --- Idempotency: insert-before-send. A row already sent for this id is never sent twice. ---
+        var existing = await _emailRepository.GetByMessageIdAsync(request.MessageId, cancellationToken);
+        Guid emailId;
+        if (existing is not null)
         {
-            ServiceName = resolvedServiceName,
-            EmailType = request.EmailType,
-            ToRecipients = request.ToEmail,
-            ReplyTo = senderIdentity.ReplyTo,
-            Subject = rendered.Subject,
-            Status = EEmailStatus.Pending
-        };
+            if (existing.Status == EEmailStatus.Sent)
+            {
+                _logger.LogInformation(
+                    "Duplicate delivery ignored; already sent. MessageId: {MessageId}, Source: {Source}, Tenant: {Tenant}, Action: {Action}",
+                    request.MessageId, request.Source, request.Tenant, request.EmailType);
+                return EmailDispatchResult.From(EmailDispatchOutcome.AlreadySent, existing.Id);
+            }
 
-        var createEmailResponse = await _emailRepository.CreateAsync(email);
-        if (!createEmailResponse.Successful || createEmailResponse.Value is null)
+            // A prior attempt failed transiently and was requeued — this is the retry, not a duplicate.
+            emailId = existing.Id;
+        }
+        else
         {
-            _logger.LogError(
-                "Email dispatch failed because email record could not be created. ServiceName: {ServiceName}, RequestedServiceName: {RequestedServiceName}, EmailType: {EmailType}, CorrelationId: {CorrelationId}, ErrorMessage: {ErrorMessage}",
-                resolvedServiceName,
-                request.ServiceName,
-                request.EmailType,
-                request.CorrelationId,
-                createEmailResponse.Error!.Message);
+            var created = await _emailRepository.TryCreatePendingAsync(
+                new Email
+                {
+                    MessageId = request.MessageId,
+                    ServiceName = request.Source,
+                    Tenant = request.Tenant,
+                    EmailType = request.EmailType,
+                    ToRecipients = request.ToEmail,
+                    ReplyTo = branding.ReplyTo,
+                    Status = EEmailStatus.Pending
+                },
+                cancellationToken);
 
-            return Failure(createEmailResponse.Error.Message);
+            if (created is null)
+            {
+                // Lost the insert race to a concurrent duplicate delivery — it owns the send.
+                _logger.LogInformation(
+                    "Duplicate delivery ignored on insert race. MessageId: {MessageId}, Source: {Source}, Tenant: {Tenant}, Action: {Action}",
+                    request.MessageId, request.Source, request.Tenant, request.EmailType);
+                return EmailDispatchResult.From(EmailDispatchOutcome.AlreadySent);
+            }
+
+            emailId = created.Id;
         }
 
-        email = createEmailResponse.Value;
-        await _uow.SaveChangesAsync();
+        // --- Render. A render failure is permanent (a bad template/model won't fix itself). ---
+        RenderedEmailTemplate rendered;
+        try
+        {
+            rendered = await _templateRenderer.RenderAsync(
+                template,
+                new EmailTemplateModel
+                {
+                    Content = request.Content,
+                    Branding = new EmailBranding
+                    {
+                        Tenant = request.Tenant,
+                        FromAddress = branding.FromAddress,
+                        DisplayName = branding.DisplayName,
+                        ReplyTo = branding.ReplyTo
+                    },
+                    Fmt = new LocaleFormatter(languageCode),
+                    Locale = languageCode
+                },
+                cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            // Log the type only, never exception.Message — a render error can echo model values
+            // (otpCode, actionLink) and this path feeds GlitchTip.
+            _logger.LogError(
+                "Template render failed ({ExceptionType}). MessageId: {MessageId}, Source: {Source}, Tenant: {Tenant}, Action: {Action}",
+                exception.GetType().Name, request.MessageId, request.Source, request.Tenant, request.EmailType);
 
-        _logger.LogInformation(
-            "Email record created. EmailId: {EmailId}, ServiceName: {ServiceName}, RequestedServiceName: {RequestedServiceName}, EmailType: {EmailType}, CorrelationId: {CorrelationId}",
-            email.Id,
-            resolvedServiceName,
-            request.ServiceName,
-            request.EmailType,
-            request.CorrelationId);
+            await _emailRepository.UpdateDeliveryStatusAsync(
+                emailId, EEmailStatus.Failed, null, null, cancellationToken);
+            return EmailDispatchResult.From(EmailDispatchOutcome.PermanentFailure, emailId, "Template render failed.");
+        }
 
+        // --- Send. ---
         var sendResult = await _emailSender.SendAsync(
             new OutboundEmailMessage
             {
-                FromAddress = senderIdentity.FromAddress,
-                FromDisplayName = senderIdentity.DisplayName,
-                ReplyTo = senderIdentity.ReplyTo,
+                FromAddress = branding.FromAddress,
+                FromDisplayName = branding.DisplayName,
+                ReplyTo = branding.ReplyTo,
                 ToEmail = request.ToEmail,
                 Subject = rendered.Subject,
                 HtmlBody = rendered.HtmlBody,
@@ -214,96 +163,43 @@ public class EmailDispatchService : IEmailDispatchService
             },
             cancellationToken);
 
-        email.Status = sendResult.Successful
-            ? EEmailStatus.Sent
-            : EEmailStatus.Failed;
-
         if (sendResult.Successful)
         {
-            email.SentAt = DateTime.UtcNow;
-        }
+            await _emailRepository.UpdateDeliveryStatusAsync(
+                emailId, EEmailStatus.Sent, rendered.Subject, DateTime.UtcNow, cancellationToken);
 
-        var updatedEmailCount = await _emailRepository.UpdateDeliveryStatusAsync(
-            email.Id,
-            email.Status,
-            email.SentAt,
-            cancellationToken);
-
-        if (updatedEmailCount != 1)
-        {
-            _logger.LogError(
-                "Email dispatch failed because email record status could not be updated. EmailId: {EmailId}, CorrelationId: {CorrelationId}, UpdatedEmailCount: {UpdatedEmailCount}",
-                email.Id,
-                request.CorrelationId,
-                updatedEmailCount);
-
-            return Failure("Email record status could not be updated.");
-        }
-
-        if (sendResult.Successful)
-        {
             _logger.LogInformation(
-                "Email dispatch completed. EmailId: {EmailId}, ProviderMessageId: {ProviderMessageId}, CorrelationId: {CorrelationId}",
-                email.Id,
-                sendResult.ProviderMessageId,
-                request.CorrelationId);
-        }
-        else
-        {
-            _logger.LogError(
-                "Email dispatch failed. EmailId: {EmailId}, CorrelationId: {CorrelationId}, ErrorMessage: {ErrorMessage}",
-                email.Id,
-                request.CorrelationId,
-                sendResult.ErrorMessage);
+                "Email sent. EmailId: {EmailId}, MessageId: {MessageId}, Source: {Source}, Tenant: {Tenant}, Action: {Action}",
+                emailId, request.MessageId, request.Source, request.Tenant, request.EmailType);
+            return EmailDispatchResult.From(EmailDispatchOutcome.Sent, emailId);
         }
 
-        return sendResult.Successful
-            ? Success(email.Id)
-            : Failure(sendResult.ErrorMessage ?? "Email provider failed to send message.");
+        await _emailRepository.UpdateDeliveryStatusAsync(
+            emailId, EEmailStatus.Failed, rendered.Subject, null, cancellationToken);
+
+        var outcome = sendResult.Transient
+            ? EmailDispatchOutcome.TransientFailure
+            : EmailDispatchOutcome.PermanentFailure;
+
+        _logger.LogError(
+            "Email send failed ({Outcome}). EmailId: {EmailId}, MessageId: {MessageId}, Source: {Source}, Tenant: {Tenant}, Action: {Action}",
+            outcome, emailId, request.MessageId, request.Source, request.Tenant, request.EmailType);
+
+        return EmailDispatchResult.From(outcome, emailId, sendResult.ErrorMessage);
     }
 
-    private static string? Validate(SendTemplatedEmailRequest request)
+    private EmailDispatchResult Permanent(SendTemplatedEmailRequest request, string reason)
     {
-        if (string.IsNullOrWhiteSpace(request.ServiceName))
-        {
-            return "Service name is required.";
-        }
-
-        if (string.IsNullOrWhiteSpace(request.EmailType))
-        {
-            return "Email type is required.";
-        }
-
-        if (string.IsNullOrWhiteSpace(request.ToEmail))
-        {
-            return "Recipient email is required.";
-        }
-
-        return null;
+        _logger.LogError(
+            "Email dispatch rejected: {Reason} MessageId: {MessageId}, Source: {Source}, Tenant: {Tenant}, Action: {Action}",
+            reason, request.MessageId, request.Source, request.Tenant, request.EmailType);
+        return EmailDispatchResult.From(EmailDispatchOutcome.PermanentFailure, error: reason);
     }
 
     private static string NormalizeLanguageCode(string? languageCode)
     {
         return string.IsNullOrWhiteSpace(languageCode)
-            ? "en"
+            ? DefaultLanguageCode
             : languageCode.Trim().ToLowerInvariant();
-    }
-
-    private static string? GetFallbackServiceName(string serviceName)
-    {
-        return serviceName.StartsWith("identity.", StringComparison.OrdinalIgnoreCase) &&
-               !string.Equals(serviceName, "identity.base", StringComparison.OrdinalIgnoreCase)
-            ? "identity.base"
-            : null;
-    }
-
-    private static IMethodResponse<Guid> Success(Guid value)
-    {
-        return MethodResponse<Guid>.Success(value);
-    }
-
-    private static IMethodResponse<Guid> Failure(string message)
-    {
-        return MethodResponse<Guid>.Failure(new Error("email.dispatch.failed", message));
     }
 }

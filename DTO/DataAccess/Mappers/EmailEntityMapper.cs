@@ -12,7 +12,9 @@ public class EmailEntityMapper : IMapper<Email, EmailEntity>
             : new Email
             {
                 Id = entity.Id,
+                MessageId = entity.MessageId,
                 ServiceName = entity.ServiceName,
+                Tenant = entity.Tenant,
                 EmailType = entity.EmailType,
                 ToRecipients = entity.ToRecipients,
                 ReplyTo = entity.ReplyTo,
@@ -34,7 +36,9 @@ public class EmailEntityMapper : IMapper<Email, EmailEntity>
             : new EmailEntity
             {
                 Id = entity.Id,
+                MessageId = entity.MessageId,
                 ServiceName = entity.ServiceName,
+                Tenant = entity.Tenant,
                 EmailType = entity.EmailType,
                 ToRecipients = entity.ToRecipients,
                 ReplyTo = entity.ReplyTo,

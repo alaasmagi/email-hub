@@ -9,6 +9,8 @@ public class SenderIdentityEntity : BaseEntityWithMeta
     [MaxLength(64)]
     public string EmailType { get; set; } = default!;
     [MaxLength(64)]
+    public string Tenant { get; set; } = string.Empty;
+    [MaxLength(64)]
     public string FromAddress { get; set; } = default!; 
     [MaxLength(64)]
     public string DisplayName { get; set; } = default!;

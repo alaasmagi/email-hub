@@ -7,8 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="alaasmagi.Base.Contracts.DataAccess" Version="1.1.9" />
-      <PackageReference Include="alaasmagi.Base.Contracts.DTO" Version="1.1.9" />
+      <PackageReference Include="alaasmagi.Base.Contracts.DataAccess" Version="1.3.0" />
+      <PackageReference Include="alaasmagi.Base.Contracts.DTO" Version="1.3.0" />
     </ItemGroup>
 
     <ItemGroup>

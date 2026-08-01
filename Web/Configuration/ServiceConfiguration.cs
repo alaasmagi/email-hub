@@ -89,9 +89,15 @@ public static class ServiceConfiguration
             options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
         });
 
+        // Registers RabbitMqOptions + the shared connection manager. No publisher is wired: this
+        // application has no publish permission on the broker and never publishes.
         services.AddRabbitMq(BuildRabbitMqOptions());
-        services.AddSingleton(new EmailQueueOptions { QueueName = Env.GetRequired("RABBITMQ_QUEUE") });
-        services.AddSingleton<IBaseEventHandler<JsonElement>, EmailEventHandler>();
+        services.AddSingleton(new EmailQueueOptions
+        {
+            QueueName = Env.GetRequired("RABBITMQ_QUEUE"),
+            PrefetchCount = ParsePrefetchCount(Env.Get("RABBITMQ_PREFETCH"))
+        });
+        services.AddScoped<IEmailCommandProcessor, EmailCommandProcessor>();
         services.AddRabbitMqConsumer<EmailEventConsumer>();
 
         return services;
@@ -189,6 +195,17 @@ public static class ServiceConfiguration
         });
 
         return services;
+    }
+
+    private static ushort ParsePrefetchCount(string? value)
+    {
+        // Default to 10 in-flight deliveries; never leave prefetch unbounded (0).
+        if (ushort.TryParse(value, out var prefetch) && prefetch > 0)
+        {
+            return prefetch;
+        }
+
+        return 10;
     }
 
     private static RabbitMqOptions BuildRabbitMqOptions()

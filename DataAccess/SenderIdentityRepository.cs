@@ -40,14 +40,19 @@ public class SenderIdentityRepository : BaseRepository<SenderIdentity, SenderIde
         return _repositoryMapper.Map(entity);
     }
 
-    public async Task<SenderIdentity?> GetActiveAsync(Guid clientId, string emailType)
+    public async Task<SenderIdentity?> GetActiveAsync(Guid clientId, string emailType, string tenant)
     {
+        // Prefer the tenant-specific branding row; fall back to the tenant-agnostic default ("").
+        // Ordering by Tenant descending puts a non-empty tenant match ahead of the "" default.
         var entity = await _repositoryDbContext.SenderIdentities
             .AsNoTracking()
-            .FirstOrDefaultAsync(x =>
+            .Where(x =>
                 x.ClientId == clientId &&
                 x.EmailType == emailType &&
-                x.IsActive);
+                x.IsActive &&
+                (x.Tenant == tenant || x.Tenant == ""))
+            .OrderByDescending(x => x.Tenant == tenant)
+            .FirstOrDefaultAsync();
 
         return _repositoryMapper.Map(entity);
     }

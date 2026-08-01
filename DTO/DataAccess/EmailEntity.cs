@@ -7,7 +7,11 @@ namespace DTO.DataAccess;
 public class EmailEntity : BaseEntityWithMeta
 {
     [MaxLength(64)]
+    public string MessageId { get; set; } = default!;
+    [MaxLength(64)]
     public string ServiceName { get; set; } = default!;
+    [MaxLength(64)]
+    public string Tenant { get; set; } = default!;
     [MaxLength(64)]
     public string EmailType { get; set; } = default!;
     [MaxLength(2048)]
