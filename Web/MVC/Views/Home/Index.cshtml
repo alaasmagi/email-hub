@@ -2,62 +2,44 @@
     ViewData["Title"] = "Email Hub";
 }
 
-<section class="home-hero">
-    <div class="container">
-        <div class="row align-items-center g-5">
-            <div class="col-lg-7">
-                <p class="home-kicker">Transactional email operations</p>
-                <h1>Email Hub</h1>
-                <p class="home-copy">
-                    A microservice for centralized transactional email routing, template rendering, sender management, and delivery review.
-                </p>
-
-                @if (User.Identity?.IsAuthenticated == true)
-                {
-                    <div class="d-flex flex-wrap gap-2">
-                        <a class="btn btn-primary btn-lg" asp-controller="Client" asp-action="Index">Open admin</a>
-                        <a class="btn btn-outline-secondary btn-lg" asp-controller="Email" asp-action="Index">View deliveries</a>
-                    </div>
-                }
-                else
-                {
-                    <a class="btn btn-primary btn-lg" asp-controller="Account" asp-action="Login">Login</a>
-                }
-            </div>
-        </div>
-    </div>
-</section>
-
 @if (User.Identity?.IsAuthenticated == true)
 {
-    <section class="home-actions">
-        <div class="container">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <a class="action-card" asp-controller="Client" asp-action="Index">
-                        <span>Clients</span>
-                        <strong>Manage service mappings</strong>
-                    </a>
-                </div>
-                <div class="col-md-3">
-                    <a class="action-card" asp-controller="SenderIdentity" asp-action="Index">
-                        <span>Senders</span>
-                        <strong>Control sender identities</strong>
-                    </a>
-                </div>
-                <div class="col-md-3">
-                    <a class="action-card" asp-controller="Template" asp-action="Index">
-                        <span>Templates</span>
-                        <strong>Edit database cshtml</strong>
-                    </a>
-                </div>
-                <div class="col-md-3">
-                    <a class="action-card" asp-controller="Email" asp-action="Index">
-                        <span>Emails</span>
-                        <strong>Review delivery status</strong>
-                    </a>
-                </div>
-            </div>
+    <section class="eh-hero">
+        <p class="kicker">Transactional email operations</p>
+        <h1>Email Hub</h1>
+        <p>A microservice for centralized transactional email routing, template rendering, sender management, and delivery review.</p>
+        <div class="actions">
+            <a class="btn btn--primary" asp-controller="Client" asp-action="Index">Open admin</a>
+            <a class="btn btn--secondary" asp-controller="Email" asp-action="Index">View deliveries</a>
         </div>
+    </section>
+
+    <section class="action-grid" aria-label="Admin sections">
+        <a class="card action-card" asp-controller="Client" asp-action="Index">
+            <span class="icon-tile"><svg class="icon" aria-hidden="true"><use href="#i-server"></use></svg></span>
+            <span class="action-card__text"><span class="kicker">Clients</span><strong>Manage service mappings</strong></span>
+        </a>
+        <a class="card action-card" asp-controller="SenderIdentity" asp-action="Index">
+            <span class="icon-tile"><svg class="icon" aria-hidden="true"><use href="#i-at-sign"></use></svg></span>
+            <span class="action-card__text"><span class="kicker">Senders</span><strong>Control sender identities</strong></span>
+        </a>
+        <a class="card action-card" asp-controller="Template" asp-action="Index">
+            <span class="icon-tile"><svg class="icon" aria-hidden="true"><use href="#i-file-code"></use></svg></span>
+            <span class="action-card__text"><span class="kicker">Templates</span><strong>Edit database cshtml</strong></span>
+        </a>
+        <a class="card action-card" asp-controller="Email" asp-action="Index">
+            <span class="icon-tile"><svg class="icon" aria-hidden="true"><use href="#i-mail"></use></svg></span>
+            <span class="action-card__text"><span class="kicker">Emails</span><strong>Review delivery status</strong></span>
+        </a>
+    </section>
+}
+else
+{
+    <section class="sign-in">
+        <p class="kicker">Transactional email operations</p>
+        <h1>Email Hub</h1>
+        <p>Sign in with your platform account to manage clients, senders, templates and deliveries.</p>
+        <a class="btn btn--primary" asp-controller="Account" asp-action="Login">Login</a>
+        <p class="footnote">Access is limited to authenticated operators.</p>
     </section>
 }

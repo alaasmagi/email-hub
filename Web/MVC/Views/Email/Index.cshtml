@@ -4,43 +4,45 @@
     ViewData["Title"] = "Emails";
 }
 
-<div class="container">
-<div class="page-header">
-    <div>
-        <p class="page-kicker">Delivery log</p>
-        <h1 class="page-title">Emails</h1>
+<header class="page-header">
+    <div class="page-header__title">
+        <p class="kicker">Delivery log</p>
+        <h1>Emails</h1>
     </div>
-</div>
+</header>
 
-<div class="table-card">
-<table class="table table-hover align-middle">
-    <thead>
-    <tr>
-        <th>Service</th>
-        <th>Type</th>
-        <th>To</th>
-        <th>Subject</th>
-        <th>Status</th>
-        <th>Sent at</th>
-        <th class="text-end">Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach (var email in Model)
-    {
+<div class="card table-card">
+    <table class="data-table">
+        <thead>
         <tr>
-            <td>@email.ServiceName</td>
-            <td>@email.EmailType</td>
-            <td>@email.ToRecipients</td>
-            <td>@email.Subject</td>
-            <td><span class="status-badge">@email.Status</span></td>
-            <td>@email.SentAt?.ToString("u")</td>
-            <td class="text-end">
-                <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@email.Id">Details</a>
-            </td>
+            <th>Service</th>
+            <th>Type</th>
+            <th>To</th>
+            <th>Subject</th>
+            <th>Status</th>
+            <th>Sent at</th>
+            <th class="actions-col"><span class="visually-hidden">Actions</span></th>
         </tr>
-    }
-    </tbody>
-</table>
-</div>
+        </thead>
+        <tbody>
+        @foreach (var email in Model)
+        {
+            <tr>
+                <td><code class="code-chip">@email.ServiceName</code></td>
+                <td class="mono">@email.EmailType</td>
+                <td>@email.ToRecipients</td>
+                <td>@email.Subject</td>
+                <td><partial name="_EmailStatus" model="email.Status"/></td>
+                <td class="nowrap mono secondary">@email.SentAt?.ToString("u")</td>
+                <td class="actions-col">
+                    <a class="btn btn--ghost btn--sm" asp-action="Details" asp-route-id="@email.Id">Details</a>
+                </td>
+            </tr>
+        }
+        @if (!Model.Any())
+        {
+            <tr><td colspan="7" class="empty">No emails have been sent yet.</td></tr>
+        }
+        </tbody>
+    </table>
 </div>

@@ -4,24 +4,22 @@
     ViewData["Title"] = "Edit template";
 }
 
-<div class="container">
-<div class="page-header">
-    <div>
-        <p class="page-kicker">Razor email bodies</p>
-        <h1 class="page-title">Edit template</h1>
+<header class="page-header">
+    <div class="page-header__title">
+        <p class="kicker">Razor email bodies</p>
+        <h1>Edit template</h1>
     </div>
-</div>
+</header>
 
-<form asp-action="Edit" method="post" class="form-card vstack gap-3">
+<form asp-action="Edit" method="post" class="card form wide">
     <input type="hidden" asp-for="Id"/>
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div asp-validation-summary="ModelOnly"></div>
     <partial name="_Form" model="Model"/>
-    <div>
-        <button type="submit" class="btn btn-primary">Save</button>
-        <a class="btn btn-outline-secondary" asp-action="Index">Cancel</a>
+    <div class="form-actions">
+        <button type="submit" class="btn btn--primary">Save</button>
+        <a class="btn btn--ghost" asp-action="Index">Cancel</a>
     </div>
 </form>
-</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial"/>

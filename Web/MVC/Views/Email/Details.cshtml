@@ -4,38 +4,22 @@
     ViewData["Title"] = "Email details";
 }
 
-<div class="container">
-<div class="page-header">
-    <div>
-        <p class="page-kicker">Delivery log</p>
-        <h1 class="page-title">Email details</h1>
+<header class="page-header">
+    <div class="page-header__title">
+        <p class="kicker">Delivery log</p>
+        <h1>Email details</h1>
     </div>
-</div>
+</header>
 
-<div class="details-card">
-<dl class="details-list row">
-    <dt class="col-sm-3">Service</dt>
-    <dd class="col-sm-9">@Model.ServiceName</dd>
-
-    <dt class="col-sm-3">Type</dt>
-    <dd class="col-sm-9">@Model.EmailType</dd>
-
-    <dt class="col-sm-3">To</dt>
-    <dd class="col-sm-9">@Model.ToRecipients</dd>
-
-    <dt class="col-sm-3">Reply-to</dt>
-    <dd class="col-sm-9">@Model.ReplyTo</dd>
-
-    <dt class="col-sm-3">Subject</dt>
-    <dd class="col-sm-9">@Model.Subject</dd>
-
-    <dt class="col-sm-3">Status</dt>
-    <dd class="col-sm-9">@Model.Status</dd>
-
-    <dt class="col-sm-3">Sent at</dt>
-    <dd class="col-sm-9">@Model.SentAt?.ToString("u")</dd>
-</dl>
-
-<a class="btn btn-outline-secondary" asp-action="Index">Back</a>
-</div>
+<div class="section medium">
+    <dl class="card details">
+        <div class="details__row"><dt>Service</dt><dd><code class="code-chip">@Model.ServiceName</code></dd></div>
+        <div class="details__row"><dt>Type</dt><dd class="mono">@Model.EmailType</dd></div>
+        <div class="details__row"><dt>To</dt><dd>@Model.ToRecipients</dd></div>
+        <div class="details__row"><dt>Reply-to</dt><dd>@Model.ReplyTo</dd></div>
+        <div class="details__row"><dt>Subject</dt><dd>@Model.Subject</dd></div>
+        <div class="details__row"><dt>Status</dt><dd><partial name="_EmailStatus" model="Model.Status"/></dd></div>
+        <div class="details__row"><dt>Sent at</dt><dd class="mono">@Model.SentAt?.ToString("u")</dd></div>
+    </dl>
+    <div><a class="btn btn--secondary" asp-action="Index">Back to emails</a></div>
 </div>

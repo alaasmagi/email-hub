@@ -4,23 +4,21 @@
     ViewData["Title"] = "Create client";
 }
 
-<div class="container">
-<div class="page-header">
-    <div>
-        <p class="page-kicker">Service mappings</p>
-        <h1 class="page-title">Create client</h1>
+<header class="page-header">
+    <div class="page-header__title">
+        <p class="kicker">Service mappings</p>
+        <h1>Create client</h1>
     </div>
-</div>
+</header>
 
-<form asp-action="Create" method="post" class="form-card vstack gap-3">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<form asp-action="Create" method="post" class="card form narrow">
+    <div asp-validation-summary="ModelOnly"></div>
     <partial name="_Form" model="Model"/>
-    <div>
-        <button type="submit" class="btn btn-primary">Create</button>
-        <a class="btn btn-outline-secondary" asp-action="Index">Cancel</a>
+    <div class="form-actions">
+        <button type="submit" class="btn btn--primary">Create client</button>
+        <a class="btn btn--ghost" asp-action="Index">Cancel</a>
     </div>
 </form>
-</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial"/>

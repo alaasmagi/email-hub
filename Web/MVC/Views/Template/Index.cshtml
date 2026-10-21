@@ -4,61 +4,60 @@
     ViewData["Title"] = "Templates";
 }
 
-<div class="container">
-<div class="page-header">
-    <div>
-        <p class="page-kicker">Razor email bodies</p>
-        <h1 class="page-title">Templates</h1>
+<header class="page-header">
+    <div class="page-header__title">
+        <p class="kicker">Razor email bodies</p>
+        <h1>Templates</h1>
     </div>
-    <a class="btn btn-primary" asp-action="Create">Create</a>
-</div>
+    <div class="page-header__actions">
+        <a class="btn btn--primary" asp-action="Create"><svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>Create template</a>
+    </div>
+</header>
 
-@if (TempData["SuccessMessage"] is string successMessage)
-{
-    <div class="alert alert-success">@successMessage</div>
-}
+<partial name="_TempDataAlerts"/>
 
-@if (TempData["ErrorMessage"] is string errorMessage)
-{
-    <div class="alert alert-danger">@errorMessage</div>
-}
-
-<div class="table-card">
-<table class="table table-hover align-middle">
-    <thead>
-    <tr>
-        <th>Client service</th>
-        <th>Sender identity</th>
-        <th>Language</th>
-        <th>Subject</th>
-        <th>Active</th>
-        <th class="text-end">Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach (var template in Model)
-    {
+<div class="card table-card">
+    <table class="data-table">
+        <thead>
         <tr>
-            <td><code>@template.ClientServiceName</code></td>
-            <td>
-                <div>@template.SenderEmailType</div>
-                <code>@template.SenderFromAddress</code>
-            </td>
-            <td>@template.Template.LanguageCode</td>
-            <td>@template.Template.SubjectTemplate</td>
-            <td>
-                <span class="status-badge @(template.Template.IsActive ? "is-active" : "")">@(template.Template.IsActive ? "Active" : "Inactive")</span>
-            </td>
-            <td class="text-end">
-                <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@template.Template.Id">Edit</a>
-                <form asp-action="Delete" asp-route-id="@template.Template.Id" method="post" class="d-inline"
-                      onsubmit="return confirm('Delete this template?');">
-                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                </form>
-            </td>
+            <th>Client service</th>
+            <th>Sender identity</th>
+            <th>Language</th>
+            <th>Subject</th>
+            <th>Status</th>
+            <th class="actions-col">Actions</th>
         </tr>
-    }
-    </tbody>
-</table>
-</div>
+        </thead>
+        <tbody>
+        @foreach (var template in Model)
+        {
+            <tr>
+                <td><code class="code-chip">@template.ClientServiceName</code></td>
+                <td>
+                    <div class="stack-cell">
+                        <span class="mono">@template.SenderEmailType</span>
+                        <span>@template.SenderFromAddress</span>
+                    </div>
+                </td>
+                <td><code class="code-chip">@template.Template.LanguageCode</code></td>
+                <td>@template.Template.SubjectTemplate</td>
+                <td><partial name="_ActiveBadge" model="template.Template.IsActive"/></td>
+                <td class="actions-col">
+                    <div class="row-actions">
+                        <a class="icon-btn" asp-action="Edit" asp-route-id="@template.Template.Id" aria-label="Edit template" title="Edit template"><svg class="icon" aria-hidden="true"><use href="#i-pencil"></use></svg></a>
+                        <form asp-action="Delete" asp-route-id="@template.Template.Id" method="post"
+                              data-confirm="This action cannot be undone."
+                              data-confirm-title="Delete this template?" data-confirm-label="Delete template">
+                            <button type="submit" class="icon-btn icon-btn--danger" aria-label="Delete template" title="Delete template"><svg class="icon" aria-hidden="true"><use href="#i-trash"></use></svg></button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        }
+        @if (!Model.Any())
+        {
+            <tr><td colspan="6" class="empty">No templates yet.</td></tr>
+        }
+        </tbody>
+    </table>
 </div>

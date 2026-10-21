@@ -4,46 +4,51 @@
     var selectedSenderIdentity = senderIdentities.FirstOrDefault(x => x.Id == Model.SenderIdentityId) ?? senderIdentities.FirstOrDefault();
 }
 
-<div>
-    <label class="form-label" asp-for="SenderIdentityId"></label>
-    <select class="form-select" id="SenderIdentityId" name="SenderIdentityId">
-        @foreach (var senderIdentity in senderIdentities)
-        {
-            <option value="@senderIdentity.Id" data-service-name="@senderIdentity.ClientServiceName" selected="@(senderIdentity.Id == selectedSenderIdentity?.Id)">
-                @senderIdentity.ClientServiceName - @senderIdentity.EmailType - @senderIdentity.FromAddress
-            </option>
-        }
-    </select>
-    <span class="text-danger" asp-validation-for="SenderIdentityId"></span>
+<div class="form-row form-row--template">
+    <div class="field">
+        <label class="field__label" asp-for="SenderIdentityId"></label>
+        <div class="field__control">
+            <select class="input" id="SenderIdentityId" name="SenderIdentityId">
+                @foreach (var senderIdentity in senderIdentities)
+                {
+                    <option value="@senderIdentity.Id" data-service-name="@senderIdentity.ClientServiceName" selected="@(senderIdentity.Id == selectedSenderIdentity?.Id)">
+                        @senderIdentity.ClientServiceName — @senderIdentity.EmailType — @senderIdentity.FromAddress
+                    </option>
+                }
+            </select>
+            <svg class="icon icon--end" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+        </div>
+        <span asp-validation-for="SenderIdentityId"></span>
+    </div>
+
+    <div class="field">
+        <label class="field__label" for="ClientServiceName">Client service name</label>
+        <input class="input mono" id="ClientServiceName" value="@selectedSenderIdentity?.ClientServiceName" readonly/>
+    </div>
+
+    <div class="field">
+        <label class="field__label" asp-for="LanguageCode"></label>
+        <input class="input mono" asp-for="LanguageCode" placeholder="e.g. en"/>
+        <span asp-validation-for="LanguageCode"></span>
+    </div>
 </div>
 
-<div>
-    <label class="form-label" for="ClientServiceName">Client service name</label>
-    <input class="form-control font-monospace" id="ClientServiceName" value="@selectedSenderIdentity?.ClientServiceName" readonly/>
+<div class="field">
+    <label class="field__label" asp-for="SubjectTemplate"></label>
+    <textarea class="input mono" asp-for="SubjectTemplate" rows="3"></textarea>
+    <span asp-validation-for="SubjectTemplate"></span>
 </div>
 
-<div>
-    <label class="form-label" asp-for="LanguageCode"></label>
-    <input class="form-control" asp-for="LanguageCode"/>
-    <span class="text-danger" asp-validation-for="LanguageCode"></span>
+<div class="field">
+    <label class="field__label" asp-for="HtmlBodyTemplate"></label>
+    <textarea class="input mono" asp-for="HtmlBodyTemplate" rows="18" spellcheck="false"></textarea>
+    <span asp-validation-for="HtmlBodyTemplate"></span>
 </div>
 
-<div>
-    <label class="form-label" asp-for="SubjectTemplate"></label>
-    <textarea class="form-control font-monospace" asp-for="SubjectTemplate" rows="3"></textarea>
-    <span class="text-danger" asp-validation-for="SubjectTemplate"></span>
-</div>
-
-<div>
-    <label class="form-label" asp-for="HtmlBodyTemplate"></label>
-    <textarea class="form-control font-monospace" asp-for="HtmlBodyTemplate" rows="18"></textarea>
-    <span class="text-danger" asp-validation-for="HtmlBodyTemplate"></span>
-</div>
-
-<div class="form-check">
-    <input class="form-check-input" asp-for="IsActive"/>
-    <label class="form-check-label" asp-for="IsActive"></label>
-</div>
+<label class="check">
+    <input asp-for="IsActive"/>
+    <span>@Html.DisplayNameFor(m => m.IsActive)</span>
+</label>
 
 <script>
     (() => {

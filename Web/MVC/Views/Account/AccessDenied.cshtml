@@ -2,10 +2,12 @@
     ViewData["Title"] = "Access denied";
 }
 
-<div class="container">
-    <div class="content-card">
-        <p class="page-kicker">Authorization</p>
-        <h1 class="page-title mb-3">Access denied</h1>
-        <p class="mb-0 text-secondary">You do not have permission to access this page.</p>
+<section class="card prose medium">
+    <span class="icon-tile"><svg class="icon icon--lg" aria-hidden="true"><use href="#i-lock"></use></svg></span>
+    <p class="kicker">Authorization</p>
+    <h1>Access denied</h1>
+    <p>You do not have permission to access this page.</p>
+    <div class="actions">
+        <a class="btn btn--secondary" asp-controller="Home" asp-action="Index">Back to home</a>
     </div>
-</div>
+</section>

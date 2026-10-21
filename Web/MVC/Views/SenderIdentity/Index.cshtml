@@ -4,60 +4,59 @@
     ViewData["Title"] = "Sender identities";
 }
 
-<div class="container">
-<div class="page-header">
-    <div>
-        <p class="page-kicker">From address routing</p>
-        <h1 class="page-title">Sender identities</h1>
+<header class="page-header">
+    <div class="page-header__title">
+        <p class="kicker">From address routing</p>
+        <h1>Sender identities</h1>
     </div>
-    <a class="btn btn-primary" asp-action="Create">Create</a>
-</div>
+    <div class="page-header__actions">
+        <a class="btn btn--primary" asp-action="Create"><svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>Create sender</a>
+    </div>
+</header>
 
-@if (TempData["SuccessMessage"] is string successMessage)
-{
-    <div class="alert alert-success">@successMessage</div>
-}
+<partial name="_TempDataAlerts"/>
 
-@if (TempData["ErrorMessage"] is string errorMessage)
-{
-    <div class="alert alert-danger">@errorMessage</div>
-}
-
-<div class="table-card">
-<table class="table table-hover align-middle">
-    <thead>
-    <tr>
-        <th>Client service</th>
-        <th>Email type</th>
-        <th>From</th>
-        <th>Display name</th>
-        <th>Reply-to</th>
-        <th>Active</th>
-        <th class="text-end">Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach (var sender in Model)
-    {
+<div class="card table-card">
+    <table class="data-table">
+        <thead>
         <tr>
-            <td><code>@sender.ClientServiceName</code></td>
-            <td>@sender.SenderIdentity.EmailType</td>
-            <td>@sender.SenderIdentity.FromAddress</td>
-            <td>@sender.SenderIdentity.DisplayName</td>
-            <td>@sender.SenderIdentity.ReplyTo</td>
-            <td>
-                <span class="status-badge @(sender.SenderIdentity.IsActive ? "is-active" : "")">@(sender.SenderIdentity.IsActive ? "Active" : "Inactive")</span>
-            </td>
-            <td class="text-end">
-                <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@sender.SenderIdentity.Id">Edit</a>
-                <form asp-action="Delete" asp-route-id="@sender.SenderIdentity.Id" method="post" class="d-inline"
-                      onsubmit="return confirm('Delete this sender identity? Templates must be deleted first.');">
-                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                </form>
-            </td>
+            <th>Client service</th>
+            <th>Email type</th>
+            <th>From</th>
+            <th>Display name</th>
+            <th>Reply-to</th>
+            <th>Status</th>
+            <th class="actions-col">Actions</th>
         </tr>
-    }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+        @foreach (var sender in Model)
+        {
+            <tr>
+                <td><code class="code-chip">@sender.ClientServiceName</code></td>
+                <td class="mono">@sender.SenderIdentity.EmailType</td>
+                <td>@sender.SenderIdentity.FromAddress</td>
+                <td>@sender.SenderIdentity.DisplayName</td>
+                <td class="secondary">@(string.IsNullOrWhiteSpace(sender.SenderIdentity.ReplyTo) ? "—" : sender.SenderIdentity.ReplyTo)</td>
+                <td><partial name="_ActiveBadge" model="sender.SenderIdentity.IsActive"/></td>
+                <td class="actions-col">
+                    <div class="row-actions">
+                        <a class="icon-btn" asp-action="Edit" asp-route-id="@sender.SenderIdentity.Id" aria-label="Edit sender identity" title="Edit sender identity"><svg class="icon" aria-hidden="true"><use href="#i-pencil"></use></svg></a>
+                        <form asp-action="Delete" asp-route-id="@sender.SenderIdentity.Id" method="post"
+                              data-confirm="Templates must be deleted first. This action cannot be undone."
+                              data-confirm-title="Delete this sender identity?" data-confirm-label="Delete sender">
+                            <button type="submit" class="icon-btn icon-btn--danger" aria-label="Delete sender identity" title="Delete sender identity"><svg class="icon" aria-hidden="true"><use href="#i-trash"></use></svg></button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        }
+        @if (!Model.Any())
+        {
+            <tr><td colspan="7" class="empty">No sender identities yet.</td></tr>
+        }
+        </tbody>
+    </table>
 </div>
-</div>
+
+<p class="footnote">A sender identity can only be deleted after its templates have been removed.</p>

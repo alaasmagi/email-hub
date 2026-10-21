@@ -1,18 +1,18 @@
 @model Client
 
-<div>
-    <label class="form-label" asp-for="ServiceName"></label>
-    <input class="form-control" asp-for="ServiceName"/>
-    <span class="text-danger" asp-validation-for="ServiceName"></span>
+<div class="field">
+    <label class="field__label" asp-for="ServiceName"></label>
+    <input class="input mono" asp-for="ServiceName" placeholder="e.g. food-app"/>
+    <span asp-validation-for="ServiceName"></span>
 </div>
 
-<div>
-    <label class="form-label" asp-for="DisplayName"></label>
-    <input class="form-control" asp-for="DisplayName"/>
-    <span class="text-danger" asp-validation-for="DisplayName"></span>
+<div class="field">
+    <label class="field__label" asp-for="DisplayName"></label>
+    <input class="input" asp-for="DisplayName" placeholder="e.g. Food App"/>
+    <span asp-validation-for="DisplayName"></span>
 </div>
 
-<div class="form-check">
-    <input class="form-check-input" asp-for="IsActive"/>
-    <label class="form-check-label" asp-for="IsActive"></label>
-</div>
+<label class="check">
+    <input asp-for="IsActive"/>
+    <span>@Html.DisplayNameFor(m => m.IsActive)</span>
+</label>
