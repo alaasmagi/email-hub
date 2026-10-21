@@ -1,0 +1,10 @@
+@model object
+@{
+    var label = Model?.ToString() ?? "Unknown";
+    var key = label.ToLowerInvariant();
+    var tone = key.Contains("fail") || key.Contains("error") || key.Contains("bounce") || key.Contains("reject") ? "danger"
+        : key.Contains("sent") || key.Contains("deliver") ? "success"
+        : key.Contains("queue") || key.Contains("pending") || key.Contains("retry") || key.Contains("process") ? "warning"
+        : "neutral";
+}
+<span class="badge badge--@tone">@label</span>
