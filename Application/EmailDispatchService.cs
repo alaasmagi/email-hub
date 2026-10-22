@@ -49,10 +49,11 @@ public class EmailDispatchService : IEmailDispatchService
         var languageCode = NormalizeLanguageCode(request.LanguageCode);
 
         // --- Resolve the three axes. A miss on any is permanent: retrying can't conjure a template. ---
-        var client = await _clientRepository.GetActiveByServiceNameAsync(request.Source);
+        var clientServiceName = request.ClientServiceName;
+        var client = await _clientRepository.GetActiveByServiceNameAsync(clientServiceName);
         if (client is null)
         {
-            return Permanent(request, $"No active client for source '{request.Source}'.");
+            return Permanent(request, $"No active client for '{clientServiceName}'.");
         }
 
         var branding = await _senderIdentityRepository.GetActiveAsync(
@@ -60,7 +61,7 @@ public class EmailDispatchService : IEmailDispatchService
         if (branding is null)
         {
             return Permanent(request,
-                $"No active sender identity for '{request.Source}/{request.EmailType}' (tenant '{request.Tenant}').");
+                $"No active sender identity for client '{clientServiceName}', action '{request.EmailType}', tenant '{request.Tenant}' (or '' fallback).");
         }
 
         var template =
@@ -69,7 +70,7 @@ public class EmailDispatchService : IEmailDispatchService
         if (template is null)
         {
             return Permanent(request,
-                $"No active template for '{request.Source}/{request.EmailType}' language '{languageCode}'.");
+                $"No active template for client '{clientServiceName}', action '{request.EmailType}', language '{languageCode}'.");
         }
 
         // --- Idempotency: insert-before-send. A row already sent for this id is never sent twice. ---

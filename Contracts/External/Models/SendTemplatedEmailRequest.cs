@@ -11,6 +11,17 @@ public class SendTemplatedEmailRequest
     /// <summary>Tenant (<c>tenant</c>) — selects branding.</summary>
     public string Tenant { get; set; } = default!;
 
+    /// <summary>
+    /// The <c>Client.ServiceName</c> this request resolves to: <c>{source}.{tenant}</c> when a tenant
+    /// is present (e.g. <c>identity-hub.invoice-service</c>), otherwise just <c>{source}</c>.
+    /// </summary>
+    public string ClientServiceName => BuildClientServiceName(Source, Tenant);
+
+    public static string BuildClientServiceName(string source, string? tenant)
+    {
+        return string.IsNullOrWhiteSpace(tenant) ? source : $"{source}.{tenant}";
+    }
+
     /// <summary>Action (<c>{source}.{action}</c> selects the template; stored as the email type).</summary>
     public string EmailType { get; set; } = default!;
 
